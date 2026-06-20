@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DessertOps ERP — Carbon</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  --sb-bg:#111827;
+  --sb-bg2:#0D1117;
+  --sb-border:#1F2937;
+  --sb-text:#6B7280;
+  --sb-text-hi:#F9FAFB;
+  --sb-label:#374151;
+  --sb-active-bg:#1F2937;
+  --sb-active-tx:#F9FAFB;
+  --sb-active-bar:#F9FAFB;
+  --sb-hover:#1A2332;
+  --sb-icon:#4B5563;
+
+  --tb-bg:#FFFFFF;
+  --tb-border:#F3F4F6;
+
+  --pg-bg:#F9FAFB;
+
+  --card:#FFFFFF;
+  --card-b:#F3F4F6;
+  --card-sh:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.03);
+  --card-sh-md:0 4px 12px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.04);
+
+  --txt:#111827;
+  --txt2:#6B7280;
+  --txt3:#9CA3AF;
+  --txt4:#D1D5DB;
+
+  --acc:#111827;
+  --acc-lt:#F9FAFB;
+  --acc-tx:#111827;
+
+  --green:#16A34A;--green-lt:#F0FDF4;--green-tx:#15803D;--green-dk:#14532D;
+  --amber:#D97706;--amber-lt:#FFFBEB;--amber-tx:#B45309;
+  --red:#DC2626;--red-lt:#FEF2F2;--red-tx:#B91C1C;
+  --blue:#2563EB;--blue-lt:#EFF6FF;--blue-tx:#1D4ED8;
+  --purple:#7C3AED;--purple-lt:#F5F3FF;--purple-tx:#6D28D9;
+
+  --div:#F3F4F6;
+  --div2:#E5E7EB;
+  --row-hov:#FAFAFA;
+
+  --btn:#111827;--btn-tx:#FFFFFF;
+  --input-bg:#fff;--input-b:#E5E7EB;--input-f:#111827;
+
+  --radius-sm:5px;
+  --radius:8px;
+  --radius-lg:10px;
+}
+
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--pg-bg);
+  color:var(--txt);
+  display:flex;height:100vh;overflow:hidden;
+  font-size:13.5px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ── SCROLLBAR ───── */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--div2);border-radius:4px;}
+
+/* ══════════════════════════════════
+   SIDEBAR
+══════════════════════════════════ */
+.sb{
+  width:228px;min-width:228px;
+  background:var(--sb-bg);
+  border-right:1px solid var(--sb-border);
+  display:flex;flex-direction:column;
+  overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:none;
+}
+.sb::-webkit-scrollbar{display:none;}
+
+.sb-logo{
+  padding:18px 16px 16px;
+  border-bottom:1px solid var(--sb-border);
+  display:flex;align-items:center;gap:10px;
+}
+.sb-mark{
+  width:30px;height:30px;border-radius:6px;
+  background:#fff;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.sb-mark svg{width:16px;height:16px;stroke:#111827;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.sb-brand{font-weight:700;font-size:13.5px;color:var(--sb-text-hi);letter-spacing:-.2px;}
+.sb-ver{font-size:10px;color:var(--sb-label);letter-spacing:.5px;text-transform:uppercase;margin-top:1px;}
+
+.sb-grp{padding:18px 0 6px;}
+.sb-grp-label{
+  font-size:10px;font-weight:600;
+  letter-spacing:.7px;text-transform:uppercase;
+  color:var(--sb-label);
+  padding:0 14px 5px;
+}
+.nav-i{
+  display:flex;align-items:center;gap:9px;
+  padding:7.5px 14px;
+  cursor:pointer;
+  color:var(--sb-text);font-size:13px;font-weight:500;
+  position:relative;
+  transition:color .12s,background .12s;
+  margin:1px 6px;border-radius:var(--radius-sm);
+}
+.nav-i:hover{background:var(--sb-hover);color:var(--sb-text-hi);}
+.nav-i:hover .ni{color:var(--sb-text-hi);}
+.nav-i.on{
+  background:var(--sb-active-bg);
+  color:var(--sb-active-tx);font-weight:600;
+}
+.nav-i.on .ni{color:var(--sb-active-tx);}
+.nav-i.on::before{
+  content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);
+  width:3px;height:16px;border-radius:0 3px 3px 0;
+  background:var(--sb-active-bar);
+}
+.ni{width:15px;height:15px;flex-shrink:0;color:var(--sb-icon);display:flex;align-items:center;justify-content:center;}
+.ni svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.75;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.nb{
+  margin-left:auto;
+  font-size:10.5px;font-weight:700;
+  padding:1.5px 6px;border-radius:10px;min-width:18px;text-align:center;
+  background:#374151;color:#9CA3AF;
+}
+.nb.red{background:var(--red-lt);color:var(--red-tx);}
+.nb.amber{background:var(--amber-lt);color:var(--amber-tx);}
+
+.sb-sep{height:1px;background:var(--sb-border);margin:6px 14px;}
+
+.sb-foot{
+  margin-top:auto;
+  border-top:1px solid var(--sb-border);
+  padding:14px 16px;
+}
+.sb-user{display:flex;align-items:center;gap:10px;}
+.sb-av{
+  width:28px;height:28px;border-radius:50%;
+  background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:800;color:#111827;flex-shrink:0;
+  letter-spacing:.3px;
+}
+.sb-un{font-size:12.5px;font-weight:600;color:var(--sb-text-hi);}
+.sb-ur{font-size:11px;color:var(--sb-label);margin-top:1px;}
+.sb-logout{margin-left:auto;color:var(--sb-icon);cursor:pointer;}
+.sb-logout svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.75;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ══════════════════════════════════
+   MAIN
+══════════════════════════════════ */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+
+/* TOPBAR */
+.tb{
+  background:var(--tb-bg);
+  border-bottom:1px solid var(--tb-border);
+  padding:0 22px;height:50px;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.tb-bc{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--txt3);}
+.tb-bc svg{width:13px;height:13px;stroke:var(--txt4);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.tb-bc b{color:var(--txt);font-weight:600;}
+.tb-sp{flex:1;}
+
+.tb-search{
+  display:flex;align-items:center;gap:7px;
+  background:var(--pg-bg);
+  border:1px solid var(--input-b);border-radius:var(--radius-sm);
+  padding:5px 11px;width:200px;
+}
+.tb-search svg{width:13px;height:13px;stroke:var(--txt3);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.tb-search input{border:none;outline:none;background:transparent;font-size:12.5px;color:var(--txt);font-family:'Inter',sans-serif;width:100%;}
+.tb-search input::placeholder{color:var(--txt3);}
+
+.tb-sel{
+  display:flex;align-items:center;gap:7px;
+  background:var(--input-bg);border:1px solid var(--input-b);border-radius:var(--radius-sm);
+  padding:5px 11px;font-size:12.5px;font-weight:500;color:var(--txt);cursor:pointer;
+  white-space:nowrap;
+}
+.tb-sel svg{width:13px;height:13px;stroke:var(--txt3);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.on-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;}
+
+.tb-icon{
+  width:30px;height:30px;border-radius:var(--radius-sm);
+  background:var(--input-bg);border:1px solid var(--input-b);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;
+}
+.tb-icon svg{width:14px;height:14px;stroke:var(--txt2);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.notif-pip{
+  position:absolute;top:6px;right:6px;
+  width:5px;height:5px;border-radius:50%;
+  background:var(--red);border:1px solid var(--tb-bg);
+}
+
+.tb-user{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 10px;border-radius:var(--radius-sm);
+  background:var(--input-bg);border:1px solid var(--input-b);cursor:pointer;
+}
+.tb-uav{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--btn);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:800;color:#fff;letter-spacing:.3px;
+}
+.tb-uname{font-size:12px;font-weight:600;color:var(--txt);}
+.tb-user svg{width:11px;height:11px;stroke:var(--txt3);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:20px 22px 32px;}
+
+/* PAGE HEADER */
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;}
+.ph-title{font-size:19px;font-weight:700;color:var(--txt);letter-spacing:-.4px;}
+.ph-sub{font-size:12px;color:var(--txt3);margin-top:3px;display:flex;align-items:center;gap:6px;}
+.ph-sub-dot{width:3px;height:3px;border-radius:50%;background:var(--txt4);}
+.ph-acts{display:flex;align-items:center;gap:8px;}
+
+.btn-ghost{
+  display:flex;align-items:center;gap:6px;
+  background:var(--input-bg);color:var(--txt2);
+  border:1px solid var(--input-b);border-radius:var(--radius-sm);
+  padding:7px 13px;font-size:12.5px;font-weight:500;
+  cursor:pointer;font-family:'Inter',sans-serif;
+  white-space:nowrap;
+}
+.btn-ghost svg{width:13px;height:13px;stroke:var(--txt2);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.btn-pri{
+  display:flex;align-items:center;gap:6px;
+  background:var(--btn);color:var(--btn-tx);
+  border:none;border-radius:var(--radius-sm);
+  padding:7px 14px;font-size:12.5px;font-weight:600;
+  cursor:pointer;font-family:'Inter',sans-serif;
+  white-space:nowrap;
+}
+.btn-pri svg{width:13px;height:13px;stroke:#fff;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ── KPI GRID ─── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.kpi{
+  background:var(--card);
+  border:1px solid var(--card-b);
+  border-radius:var(--radius-lg);
+  padding:16px 18px 14px;
+  box-shadow:var(--card-sh);
+  position:relative;overflow:hidden;
+}
+.kpi-row1{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.kpi-icon{
+  width:32px;height:32px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.kpi-icon svg{width:15px;height:15px;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.kpi-trend{
+  display:flex;align-items:center;gap:3px;
+  font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;
+}
+.kpi-trend svg{width:10px;height:10px;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.t-up{background:var(--green-lt);color:var(--green-tx);}
+.t-up svg{stroke:var(--green-tx);}
+.t-dn{background:var(--red-lt);color:var(--red-tx);}
+.t-dn svg{stroke:var(--red-tx);}
+.t-neu{background:var(--div);color:var(--txt2);}
+.kpi-val{font-size:27px;font-weight:700;color:var(--txt);letter-spacing:-.8px;line-height:1;margin-bottom:4px;}
+.kpi-val sup{font-size:14px;font-weight:700;letter-spacing:0;vertical-align:super;}
+.kpi-lbl{font-size:11.5px;color:var(--txt3);font-weight:500;}
+.kpi-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:14px;padding-top:11px;
+  border-top:1px solid var(--div);
+}
+.kpi-foot-lbl{font-size:11px;color:var(--txt3);}
+.kpi-foot-val{font-size:11px;font-weight:600;color:var(--txt2);font-family:'JetBrains Mono',monospace;}
+
+/* ── LAYOUT ROWS ─── */
+.row{display:grid;gap:14px;margin-bottom:14px;}
+.r-3-1{grid-template-columns:1fr 320px;}
+.r-2{grid-template-columns:1fr 1fr;}
+.r-3{grid-template-columns:1fr 1fr 1fr;}
+
+/* ── CARD ─── */
+.card{
+  background:var(--card);
+  border:1px solid var(--card-b);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--card-sh);
+  overflow:hidden;
+}
+.ch{
+  padding:13px 16px;
+  border-bottom:1px solid var(--div);
+  display:flex;align-items:center;gap:9px;
+}
+.ch-ic{
+  width:26px;height:26px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.ch-ic svg{width:13px;height:13px;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.ch-title{font-size:13px;font-weight:700;color:var(--txt);flex:1;}
+.ch-sub{font-size:11.5px;color:var(--txt3);margin-top:1px;}
+.ch-link{
+  font-size:12px;font-weight:600;color:var(--txt2);cursor:pointer;
+  display:flex;align-items:center;gap:3px;white-space:nowrap;
+}
+.ch-link:hover{color:var(--txt);}
+.ch-link svg{width:11px;height:11px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.cb{padding:16px;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;}
+thead th{
+  font-size:10.5px;font-weight:600;
+  letter-spacing:.4px;text-transform:uppercase;
+  color:var(--txt3);padding:9px 14px;
+  border-bottom:1px solid var(--div);text-align:left;white-space:nowrap;
+}
+tbody td{
+  padding:10px 14px;font-size:13px;color:var(--txt);
+  border-bottom:1px solid var(--div);vertical-align:middle;
+}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--row-hov);}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px;}
+.td2{color:var(--txt2);}
+.td3{color:var(--txt3);font-size:12px;}
+.td-act{
+  display:flex;align-items:center;gap:4px;
+  font-size:12px;font-weight:600;color:var(--txt2);cursor:pointer;
+}
+.td-act:hover{color:var(--txt);}
+.td-act svg{width:12px;height:12px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.td-name{font-weight:600;font-size:13px;color:var(--txt);}
+.td-meta{font-size:11.5px;color:var(--txt3);margin-top:1.5px;}
+
+/* BADGE */
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:2.5px 8px;border-radius:4px;
+  font-size:11px;font-weight:600;white-space:nowrap;
+}
+.badge svg{width:9px;height:9px;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.bg{background:var(--green-lt);color:var(--green-tx);}
+.bg svg{stroke:var(--green-tx);}
+.ba{background:var(--amber-lt);color:var(--amber-tx);}
+.ba svg{stroke:var(--amber-tx);}
+.br{background:var(--red-lt);color:var(--red-tx);}
+.br svg{stroke:var(--red-tx);}
+.bb{background:var(--blue-lt);color:var(--blue-tx);}
+.bb svg{stroke:var(--blue-tx);}
+.bp{background:var(--purple-lt);color:var(--purple-tx);}
+.bp svg{stroke:var(--purple-tx);}
+.bn{background:var(--div);color:var(--txt2);}
+
+/* STOCK BAR */
+.srows{display:flex;flex-direction:column;gap:12px;}
+.srow{}
+.srow-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.srow-name{font-size:12.5px;font-weight:600;color:var(--txt);display:flex;align-items:center;gap:6px;}
+.srow-name svg{width:11px;height:11px;stroke:var(--txt3);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.srow-right{display:flex;align-items:center;gap:7px;}
+.srow-pct{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--txt2);font-weight:500;}
+.track{height:4px;background:var(--div);border-radius:4px;overflow:hidden;}
+.fill{height:100%;border-radius:4px;transition:width .6s ease;}
+
+/* CHART */
+.chart-wrap{padding:16px 16px 0;}
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:100px;}
+.bc-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+.bc-bars{display:flex;gap:2px;align-items:flex-end;width:100%;height:100%;}
+.bc-b{flex:1;border-radius:2px 2px 0 0;min-height:2px;}
+.bc-b:hover{filter:brightness(1.1);}
+.bc-lbl{font-size:9.5px;color:var(--txt3);font-family:'JetBrains Mono',monospace;margin-top:5px;white-space:nowrap;}
+.chart-legend{
+  display:flex;gap:14px;padding:10px 16px 14px;
+  border-top:1px solid var(--div);
+}
+.leg{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--txt2);}
+.leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.chart-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border-top:1px solid var(--div);
+}
+.cs-cell{padding:12px 16px;border-right:1px solid var(--div);}
+.cs-cell:last-child{border-right:none;}
+.cs-val{font-size:16px;font-weight:700;color:var(--txt);letter-spacing:-.3px;}
+.cs-lbl{font-size:11px;color:var(--txt3);margin-top:2px;}
+
+/* ACTIVITY */
+.act-feed{display:flex;flex-direction:column;}
+.act-item{
+  display:flex;align-items:flex-start;gap:11px;
+  padding:11px 16px;border-bottom:1px solid var(--div);
+  transition:background .1s;cursor:default;
+}
+.act-item:last-child{border-bottom:none;}
+.act-item:hover{background:var(--row-hov);}
+.act-ic{
+  width:28px;height:28px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+}
+.act-ic svg{width:13px;height:13px;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.act-ti{font-size:13px;font-weight:600;color:var(--txt);}
+.act-de{font-size:12px;color:var(--txt2);margin-top:2px;}
+.act-tm{font-size:11px;color:var(--txt3);margin-top:3px;font-family:'JetBrains Mono',monospace;}
+.act-r{margin-left:auto;padding-left:10px;flex-shrink:0;}
+
+/* TOP SKU */
+.sku-item{
+  display:flex;align-items:center;gap:11px;
+  padding:10px 16px;border-bottom:1px solid var(--div);
+}
+.sku-item:last-child{border-bottom:none;}
+.sku-rank{
+  width:20px;text-align:center;flex-shrink:0;
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--txt3);
+}
+.sku-name{flex:1;min-width:0;}
+.sku-n{font-size:13px;font-weight:600;color:var(--txt);}
+.sku-s{font-size:11.5px;color:var(--txt3);margin-top:1px;}
+.sku-r{text-align:right;}
+.sku-val{font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:600;color:var(--txt);}
+.sku-bar{height:3px;background:var(--div);border-radius:3px;margin-top:5px;overflow:hidden;}
+.sku-fill{height:100%;border-radius:3px;background:var(--btn);}
+
+/* FRANCHISE TABLE */
+.fr-row{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 16px;border-bottom:1px solid var(--div);
+  transition:background .1s;
+}
+.fr-row:last-child{border-bottom:none;}
+.fr-row:hover{background:var(--row-hov);}
+.fr-av{
+  width:28px;height:28px;border-radius:6px;
+  background:var(--div);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:var(--txt2);flex-shrink:0;letter-spacing:.3px;
+}
+.fr-name{flex:1;font-size:13px;font-weight:600;color:var(--txt);}
+.fr-loc{font-size:11.5px;color:var(--txt3);margin-top:1px;}
+.fr-rev{font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:600;color:var(--txt);white-space:nowrap;}
+.fr-revl{font-size:11px;color:var(--txt3);text-align:right;margin-top:1px;}
+
+/* SUMMARY STRIP */
+.sum-strip{
+  background:var(--btn);
+  border-radius:var(--radius-lg);
+  padding:16px 20px;
+  display:flex;align-items:center;gap:0;
+  margin-bottom:14px;
+}
+.sum-item{flex:1;padding:0 20px;border-right:1px solid rgba(255,255,255,.12);}
+.sum-item:first-child{padding-left:0;}
+.sum-item:last-child{border-right:none;}
+.sum-val{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.4px;}
+.sum-val sup{font-size:11px;font-weight:700;vertical-align:super;}
+.sum-lbl{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px;font-weight:500;}
+.sum-delta{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);margin-top:2px;display:flex;align-items:center;gap:3px;}
+.sum-delta svg{width:9px;height:9px;stroke:rgba(255,255,255,.7);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+
+/* STEP STATUS */
+.steps{display:flex;align-items:center;padding:0 4px;}
+.step{display:flex;align-items:center;flex:1;}
+.step:last-child{flex:none;}
+.step-dot{
+  width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-size:10px;font-weight:700;
+}
+.step-dot svg{width:11px;height:11px;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+.s-done{background:var(--green-lt);}
+.s-done svg{stroke:var(--green-tx);}
+.s-cur{background:var(--btn);}
+.s-cur svg{stroke:#fff;}
+.s-todo{background:var(--div);}
+.s-todo svg{stroke:var(--txt3);}
+.step-line{flex:1;height:1px;background:var(--div2);}
+.step-line.done{background:var(--green);}
+.step-lbl{font-size:10px;font-weight:600;color:var(--txt3);margin-top:4px;white-space:nowrap;}
+.s-cur-lbl{color:var(--txt);}
+.s-done-lbl{color:var(--green-tx);}
+.step-col{display:flex;flex-direction:column;align-items:center;gap:0;}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sb">
+  <div class="sb-logo">
+    <div class="sb-mark">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div>
+      <div class="sb-brand">DessertOps</div>
+      <div class="sb-ver">ERP Platform v2</div>
+    </div>
+  </div>
+
+  <div class="sb-grp">
+    <div class="sb-grp-label">Overview</div>
+    <div class="nav-i on">
+      <span class="ni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>Dashboard
+    </div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>Daily Summary
+    </div>
+  </div>
+
+  <div class="sb-grp">
+    <div class="sb-grp-label">Central Kitchen</div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></span>Production
+    </div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>Recipes & BOM
+    </div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>Raw Materials
+    </div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></span>Material Conversion
+    </div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>Quality Control
+    </div>
+  </div>
+
+  <div class="sb-grp">
+    <div class="sb-grp-label">Procurement</div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span>Purchase Orders<span class="nb red">3</span>
+    </div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span>GRN<span class="nb amber">1</span>
+    </div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Suppliers
+    </div>
+  </div>
+
+  <div class="sb-grp">
+    <div class="sb-grp-label">Distribution</div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>Outlet Dispatch
+    </div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>Franchise Orders
+    </div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>Route Planning
+    </div>
+  </div>
+
+  <div class="sb-grp">
+    <div class="sb-grp-label">Finance</div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>Revenue
+    </div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>P&amp;L Reports
+    </div>
+    <div class="nav-i">
+      <span class="ni"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>Franchise Income
+    </div>
+  </div>
+
+  <div class="sb-sep"></div>
+
+  <div class="nav-i">
+    <span class="ni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></span>Settings
+  </div>
+  <div class="nav-i">
+    <span class="ni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>Help & Support
+  </div>
+
+  <div class="sb-foot">
+    <div class="sb-user">
+      <div class="sb-av">HX</div>
+      <div>
+        <div class="sb-un">Hashir</div>
+        <div class="sb-ur">System Administrator</div>
+      </div>
+      <div class="sb-logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="tb">
+    <div class="tb-bc">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      <b>Operations Overview</b>
+    </div>
+    <div class="tb-sp"></div>
+
+    <div class="tb-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search orders, SKUs, outlets…">
+    </div>
+
+    <div class="tb-sel">
+      <span class="on-dot"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      All Outlets (5)
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+
+    <div class="tb-sel" style="min-width:auto;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      June 2026
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+
+    <div class="tb-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="notif-pip"></span>
+    </div>
+
+    <div class="tb-user">
+      <div class="tb-uav">HX</div>
+      <span class="tb-uname">Hashir</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- Page Header -->
+    <div class="ph">
+      <div>
+        <div class="ph-title">Operations Dashboard</div>
+        <div class="ph-sub">
+          Monday, 16 June 2026
+          <span class="ph-sub-dot"></span>
+          Central Kitchen
+          <span class="ph-sub-dot"></span>
+          Last updated 2 min ago
+        </div>
+      </div>
+      <div class="ph-acts">
+        <button class="btn-ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
+          Export Report
+        </button>
+        <button class="btn-ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          View All Modules
+        </button>
+        <button class="btn-pri">
+          <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Purchase Order
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Strip -->
+    <div class="sum-strip">
+      <div class="sum-item">
+        <div class="sum-val"><sup>₹</sup>6,42,800</div>
+        <div class="sum-lbl">Month-to-Date Revenue</div>
+        <div class="sum-delta">
+          <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>8.1% vs last month
+        </div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-val">87.9%</div>
+        <div class="sum-lbl">Fulfillment Rate</div>
+        <div class="sum-delta">
+          <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>+3.2% this week
+        </div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-val">5</div>
+        <div class="sum-lbl">Active Outlets</div>
+        <div class="sum-delta">3 own · 2 franchise</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-val">94.2%</div>
+        <div class="sum-lbl">On-Time Dispatch</div>
+        <div class="sum-delta">
+          <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>+1.8% vs target
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Grid -->
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-row1">
+          <div class="kpi-icon" style="background:var(--purple-lt);">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--purple-tx)"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <div class="kpi-trend t-up">
+            <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>12.4%
+          </div>
+        </div>
+        <div class="kpi-val"><sup>₹</sup>84,200</div>
+        <div class="kpi-lbl">Today's Production Value</div>
+        <div class="kpi-foot">
+          <span class="kpi-foot-lbl">Yesterday</span>
+          <span class="kpi-foot-val">₹74,920</span>
+        </div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-row1">
+          <div class="kpi-icon" style="background:var(--amber-lt);">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--amber-tx)"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          </div>
+          <div class="kpi-trend t-neu">7 open</div>
+        </div>
+        <div class="kpi-val">₹86.9K</div>
+        <div class="kpi-lbl">Open PO Value</div>
+        <div class="kpi-foot">
+          <span class="kpi-foot-lbl">Pending approval</span>
+          <span class="kpi-foot-val">2 POs</span>
+        </div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-row1">
+          <div class="kpi-icon" style="background:var(--green-lt);">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--green-tx)"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </div>
+          <div class="kpi-trend t-up">
+            <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>4 done
+          </div>
+        </div>
+        <div class="kpi-val">12</div>
+        <div class="kpi-lbl">Dispatches Today</div>
+        <div class="kpi-foot">
+          <span class="kpi-foot-lbl">Pending dispatch</span>
+          <span class="kpi-foot-val">3 routes</span>
+        </div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-row1">
+          <div class="kpi-icon" style="background:var(--red-lt);">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--red-tx)"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div class="kpi-trend t-dn">
+            <svg viewBox="0 0 24 24"><polyline points="18 9 12 15 6 9"/></svg>Critical
+          </div>
+        </div>
+        <div class="kpi-val">3</div>
+        <div class="kpi-lbl">Low Stock Alerts</div>
+        <div class="kpi-foot">
+          <span class="kpi-foot-lbl">Outlets affected</span>
+          <span class="kpi-foot-val">Thrissur, Palayam</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart + Stock -->
+    <div class="row r-3-1">
+      <div class="card">
+        <div class="ch">
+          <div class="ch-ic" style="background:var(--div);">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--txt2)"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div class="ch-title">Production vs Dispatch</div>
+            <div class="ch-sub">Last 7 days · Central Kitchen</div>
+          </div>
+          <a class="ch-link">Full Report <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+        </div>
+        <div class="chart-wrap">
+          <div class="bar-chart" id="chart"></div>
+        </div>
+        <div class="chart-legend">
+          <div class="leg"><div class="leg-dot" style="background:var(--btn);"></div>Production (₹)</div>
+          <div class="leg"><div class="leg-dot" style="background:var(--green);"></div>Dispatched (₹)</div>
+          <div class="leg"><div class="leg-dot" style="background:var(--blue);opacity:.5;"></div>Franchise Orders (₹)</div>
+        </div>
+        <div class="chart-stats">
+          <div class="cs-cell">
+            <div class="cs-val">₹5.8L</div>
+            <div class="cs-lbl">Week Production</div>
+          </div>
+          <div class="cs-cell">
+            <div class="cs-val">₹5.1L</div>
+            <div class="cs-lbl">Week Dispatched</div>
+          </div>
+          <div class="cs-cell">
+            <div class="cs-val">87.9%</div>
+            <div class="cs-lbl">Fulfillment Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ch">
+          <div class="ch-ic" style="background:var(--amber-lt);">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--amber-tx)"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div class="ch-title">Outlet Stock Levels</div>
+            <div class="ch-sub">Live status</div>
+          </div>
+          <a class="ch-link">Details <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+        </div>
+        <div class="cb">
+          <div class="srows">
+            <div class="srow">
+              <div class="srow-top">
+                <span class="srow-name"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>MG Road</span>
+                <div class="srow-right"><span class="badge bg" style="font-size:10px;padding:1.5px 6px;">Own</span><span class="srow-pct">82%</span></div>
+              </div>
+              <div class="track"><div class="fill" style="width:82%;background:var(--green);"></div></div>
+            </div>
+            <div class="srow">
+              <div class="srow-top">
+                <span class="srow-name"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Calicut Beach</span>
+                <div class="srow-right"><span class="badge bg" style="font-size:10px;padding:1.5px 6px;">Own</span><span class="srow-pct">67%</span></div>
+              </div>
+              <div class="track"><div class="fill" style="width:67%;background:var(--btn);"></div></div>
+            </div>
+            <div class="srow">
+              <div class="srow-top">
+                <span class="srow-name"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Palayam</span>
+                <div class="srow-right"><span class="badge bg" style="font-size:10px;padding:1.5px 6px;">Own</span><span class="srow-pct">41%</span></div>
+              </div>
+              <div class="track"><div class="fill" style="width:41%;background:var(--amber);"></div></div>
+            </div>
+            <div class="srow">
+              <div class="srow-top">
+                <span class="srow-name"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Thrissur</span>
+                <div class="srow-right"><span class="badge ba" style="font-size:10px;padding:1.5px 6px;">Franchise</span><span class="srow-pct" style="color:var(--red-tx);">23%</span></div>
+              </div>
+              <div class="track"><div class="fill" style="width:23%;background:var(--red);"></div></div>
+            </div>
+            <div class="srow">
+              <div class="srow-top">
+                <span class="srow-name"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Kochi</span>
+                <div class="srow-right"><span class="badge ba" style="font-size:10px;padding:1.5px 6px;">Franchise</span><span class="srow-pct">58%</span></div>
+              </div>
+              <div class="track"><div class="fill" style="width:58%;background:var(--blue);"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PO Table + Activity + Top SKUs -->
+    <div class="row r-2">
+
+      <!-- PO Table -->
+      <div class="card">
+        <div class="ch">
+          <div class="ch-ic" style="background:var(--div);">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--txt2)"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div class="ch-title">Purchase Orders</div>
+            <div class="ch-sub">Recent activity</div>
+          </div>
+          <a class="ch-link">All POs <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>PO No.</th>
+              <th>Supplier</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>ETA</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">#PO-2024</td>
+              <td>
+                <div class="td-name">Kerala Dairy Co.</div>
+                <div class="td-meta">Milk, Cream · 4 items</div>
+              </td>
+              <td class="mono">₹18,400</td>
+              <td><span class="badge bg"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Received</span></td>
+              <td class="td3 mono">14 Jun</td>
+              <td><div class="td-act"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View</div></td>
+            </tr>
+            <tr>
+              <td class="mono">#PO-2025</td>
+              <td>
+                <div class="td-name">Malabar Sugar Ltd.</div>
+                <div class="td-meta">White Sugar · 2 items</div>
+              </td>
+              <td class="mono">₹9,200</td>
+              <td><span class="badge bb"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>In Transit</span></td>
+              <td class="td3 mono">17 Jun</td>
+              <td><div class="td-act"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View</div></td>
+            </tr>
+            <tr>
+              <td class="mono">#PO-2026</td>
+              <td>
+                <div class="td-name">Fresh Fruits Hub</div>
+                <div class="td-meta">Mango, Strawberry · 7 items</div>
+              </td>
+              <td class="mono">₹22,750</td>
+              <td><span class="badge ba"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Pending</span></td>
+              <td class="td3 mono">—</td>
+              <td><div class="td-act"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View</div></td>
+            </tr>
+            <tr>
+              <td class="mono">#PO-2027</td>
+              <td>
+                <div class="td-name">Packing World</div>
+                <div class="td-meta">Boxes, Labels · 3 items</div>
+              </td>
+              <td class="mono">₹5,600</td>
+              <td><span class="badge ba"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Pending</span></td>
+              <td class="td3 mono">—</td>
+              <td><div class="td-act"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View</div></td>
+            </tr>
+            <tr>
+              <td class="mono">#PO-2023</td>
+              <td>
+                <div class="td-name">Cocoa Imports Pvt.</div>
+                <div class="td-meta">Dark Cocoa, Butter · 2 items</div>
+              </td>
+              <td class="mono">₹31,000</td>
+              <td><span class="badge bg"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Received</span></td>
+              <td class="td3 mono">13 Jun</td>
+              <td><div class="td-act"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>View</div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <!-- Alerts -->
+        <div class="card">
+          <div class="ch">
+            <div class="ch-ic" style="background:var(--red-lt);">
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--red-tx)"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div style="flex:1;">
+              <div class="ch-title">System Alerts</div>
+              <div class="ch-sub">4 unread notifications</div>
+            </div>
+            <a class="ch-link">Mark all read</a>
+          </div>
+          <div class="act-feed">
+            <div class="act-item">
+              <div class="act-ic" style="background:var(--red-lt);">
+                <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--red-tx)"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div class="act-ti">Low Stock — Thrissur Outlet</div>
+                <div class="act-de">Gulab Jamun base &lt; 5 kg. Dispatch required today.</div>
+                <div class="act-tm">09:14 AM</div>
+              </div>
+              <div class="act-r"><span class="badge br">Critical</span></div>
+            </div>
+            <div class="act-item">
+              <div class="act-ic" style="background:var(--green-lt);">
+                <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--green-tx)"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div class="act-ti">GRN #0841 Confirmed</div>
+                <div class="act-de">Milk 200L received — Kerala Dairy Co.</div>
+                <div class="act-tm">08:45 AM</div>
+              </div>
+              <div class="act-r"><span class="badge bg">GRN</span></div>
+            </div>
+            <div class="act-item">
+              <div class="act-ic" style="background:var(--blue-lt);">
+                <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--blue-tx)"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div class="act-ti">Dispatch #DSP-0312 Completed</div>
+                <div class="act-de">MG Road — 28 SKUs delivered on time</div>
+                <div class="act-tm">08:20 AM</div>
+              </div>
+              <div class="act-r"><span class="badge bb">Dispatch</span></div>
+            </div>
+            <div class="act-item">
+              <div class="act-ic" style="background:var(--amber-lt);">
+                <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--amber-tx)"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div class="act-ti">Franchise Order — Kochi</div>
+                <div class="act-de">₹14,200 order pending kitchen preparation</div>
+                <div class="act-tm">Yesterday, 6:30 PM</div>
+              </div>
+              <div class="act-r"><span class="badge ba">Pending</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top SKUs -->
+        <div class="card">
+          <div class="ch">
+            <div class="ch-ic" style="background:var(--div);">
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--txt2)"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            </div>
+            <div style="flex:1;">
+              <div class="ch-title">Top Products — MTD</div>
+              <div class="ch-sub">By revenue</div>
+            </div>
+            <a class="ch-link">All SKUs <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+          </div>
+          <div>
+            <div class="sku-item">
+              <div class="sku-rank">01</div>
+              <div class="sku-name">
+                <div class="sku-n">Gulab Jamun Box</div>
+                <div class="sku-s">248 units · All outlets</div>
+              </div>
+              <div class="sku-r">
+                <div class="sku-val">₹62,000</div>
+                <div class="sku-bar"><div class="sku-fill" style="width:100%;"></div></div>
+              </div>
+            </div>
+            <div class="sku-item">
+              <div class="sku-rank">02</div>
+              <div class="sku-name">
+                <div class="sku-n">Mango Custard</div>
+                <div class="sku-s">186 units · Franchise</div>
+              </div>
+              <div class="sku-r">
+                <div class="sku-val">₹46,500</div>
+                <div class="sku-bar"><div class="sku-fill" style="width:75%;"></div></div>
+              </div>
+            </div>
+            <div class="sku-item">
+              <div class="sku-rank">03</div>
+              <div class="sku-name">
+                <div class="sku-n">Chocolate Truffle</div>
+                <div class="sku-s">142 units · Own outlets</div>
+              </div>
+              <div class="sku-r">
+                <div class="sku-val">₹42,600</div>
+                <div class="sku-bar"><div class="sku-fill" style="width:68%;"></div></div>
+              </div>
+            </div>
+            <div class="sku-item">
+              <div class="sku-rank">04</div>
+              <div class="sku-name">
+                <div class="sku-n">Paan Ice Cream</div>
+                <div class="sku-s">118 units · MG Road</div>
+              </div>
+              <div class="sku-r">
+                <div class="sku-val">₹29,500</div>
+                <div class="sku-bar"><div class="sku-fill" style="width:47%;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// Bar chart
+const cdata = [
+  {d:'Mon',p:72,dp:60,f:20},{d:'Tue',p:88,dp:78,f:35},
+  {d:'Wed',p:65,dp:55,f:28},{d:'Thu',p:95,dp:85,f:40},
+  {d:'Fri',p:78,dp:70,f:30},{d:'Sat',p:100,dp:90,f:45},
+  {d:'Sun',p:84,dp:72,f:38}
+];
+const wrap = document.getElementById('chart');
+cdata.forEach(d => {
+  const col = document.createElement('div');
+  col.className = 'bc-col';
+  col.innerHTML = `
+    <div class="bc-bars">
+      <div class="bc-b" style="height:${d.p}%;background:#111827;opacity:.85;"></div>
+      <div class="bc-b" style="height:${d.dp}%;background:#16A34A;opacity:.8;"></div>
+      <div class="bc-b" style="height:${d.f}%;background:#2563EB;opacity:.6;"></div>
+    </div>
+    <div class="bc-lbl">${d.d}</div>
+  `;
+  wrap.appendChild(col);
+});
+</script>
+</body>
+</html>
