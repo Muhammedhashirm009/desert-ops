@@ -30,7 +30,8 @@
         <th>SKU</th>
         <th>Material Name</th>
         <th>Category</th>
-        <th>Current Stock</th>
+        <th>Store Stock</th>
+        <th>Kitchen Stock</th>
         <th>Min Limit</th>
         <th>Status</th>
         <th>Actions</th>
@@ -53,6 +54,9 @@
         </td>
         <td class="mono font-semibold" style="font-weight: 600;">
           {{ number_format($material->current_stock, 2) }} {{ $material->unit }}
+        </td>
+        <td class="mono font-semibold" style="font-weight: 600; color: var(--blue-tx);">
+          {{ number_format($material->kitchen_stock, 2) }} {{ $material->unit }}
         </td>
         <td class="mono td2">
           {{ number_format($material->min_stock_alert, 2) }} {{ $material->unit }}
@@ -83,7 +87,7 @@
       </tr>
       @empty
       <tr>
-        <td colspan="7" class="text-center td2">No materials added yet. <a href="{{ route('materials.create') }}">Add one now</a>.</td>
+        <td colspan="8" class="text-center td2">No materials added yet. <a href="{{ route('materials.create') }}">Add one now</a>.</td>
       </tr>
       @endforelse
     </tbody>

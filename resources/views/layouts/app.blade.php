@@ -34,6 +34,9 @@
     <a href="{{ route('production-runs.index') }}" class="nav-i {{ request()->routeIs('production-runs.*') ? 'on' : '' }}">
       <span class="ni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></span>Production Runs
     </a>
+    <a href="{{ route('kitchen.stocks') }}" class="nav-i {{ request()->routeIs('kitchen.stocks') ? 'on' : '' }}">
+      <span class="ni"><svg viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></span>Kitchen Stock
+    </a>
     <a href="{{ route('material-requests.index') }}" class="nav-i {{ request()->routeIs('material-requests.*') ? 'on' : '' }}">
       <span class="ni"><svg viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span>Material Requests
       @php

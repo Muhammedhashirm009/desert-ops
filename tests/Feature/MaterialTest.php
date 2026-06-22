@@ -104,4 +104,23 @@ class MaterialTest extends TestCase
         $this->assertContains($m2->id, $lowStockIds);
         $this->assertNotContains($m1->id, $lowStockIds);
     }
+
+    public function test_can_view_kitchen_stocks()
+    {
+        $material = Material::create([
+            'name' => 'Cardamom',
+            'sku' => 'RAW-CRD-001',
+            'category' => 'ingredient',
+            'unit' => 'kg',
+            'current_stock' => 10,
+            'kitchen_stock' => 8.50,
+            'min_stock_alert' => 2,
+        ]);
+
+        $response = $this->get(route('kitchen.stocks'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Cardamom');
+        $response->assertSee('8.50');
+    }
 }

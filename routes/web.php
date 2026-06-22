@@ -20,6 +20,7 @@ Route::post('purchase-orders/{purchase_order}/receive', [GrnController::class, '
 Route::resource('grns', GrnController::class)->only(['index', 'show']);
 
 // Module 2: Central Kitchen Routes
+Route::get('kitchen/stocks', [MaterialController::class, 'kitchenStock'])->name('kitchen.stocks');
 Route::resource('products', ProductController::class);
 Route::resource('material-requests', MaterialRequestController::class);
 Route::post('material-requests/{material_request}/approve', [MaterialRequestController::class, 'approve'])->name('material-requests.approve');

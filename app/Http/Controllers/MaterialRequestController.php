@@ -153,9 +153,10 @@ class MaterialRequestController extends Controller
                     ->firstOrFail();
                 $reqItem->update(['quantity_released' => $qtyReleased]);
 
-                // Decrement stock
+                // Decrement store stock and increment kitchen stock
                 if ($qtyReleased > 0) {
                     $material->decrement('current_stock', $qtyReleased);
+                    $material->increment('kitchen_stock', $qtyReleased);
                 }
             }
 

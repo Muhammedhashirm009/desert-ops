@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Material;
+use App\Models\MaterialRequest;
 use Illuminate\Http\Request;
 
 class MaterialController extends Controller
@@ -64,5 +65,18 @@ class MaterialController extends Controller
     {
         $material->delete();
         return redirect()->route('materials.index')->with('success', 'Material deleted successfully.');
+    }
+
+    public function kitchenStock()
+    {
+        $materials = Material::orderBy('name', 'asc')->get();
+
+        $recentReleases = MaterialRequest::with('items.material')
+            ->where('status', 'released')
+            ->orderBy('updated_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('materials.kitchen_stock', compact('materials', 'recentReleases'));
     }
 }

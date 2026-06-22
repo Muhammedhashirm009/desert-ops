@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\MaterialRequest;
 use App\Models\MaterialRequestItem;
 use App\Models\ProductionRun;
+use App\Models\ProductionRunMaterial;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -78,6 +79,7 @@ class DatabaseSeeder extends Seeder
             'category' => 'ingredient',
             'unit' => 'L',
             'current_stock' => 350.00,
+            'kitchen_stock' => 80.00,
             'min_stock_alert' => 100.00,
         ]);
 
@@ -87,6 +89,7 @@ class DatabaseSeeder extends Seeder
             'category' => 'ingredient',
             'unit' => 'L',
             'current_stock' => 80.00,
+            'kitchen_stock' => 30.00,
             'min_stock_alert' => 20.00,
         ]);
 
@@ -96,6 +99,7 @@ class DatabaseSeeder extends Seeder
             'category' => 'ingredient',
             'unit' => 'kg',
             'current_stock' => 450.00,
+            'kitchen_stock' => 100.00,
             'min_stock_alert' => 150.00,
         ]);
 
@@ -105,6 +109,7 @@ class DatabaseSeeder extends Seeder
             'category' => 'ingredient',
             'unit' => 'kg',
             'current_stock' => 25.00,
+            'kitchen_stock' => 15.00,
             'min_stock_alert' => 10.00,
         ]);
 
@@ -114,6 +119,7 @@ class DatabaseSeeder extends Seeder
             'category' => 'ingredient',
             'unit' => 'kg',
             'current_stock' => 75.00,
+            'kitchen_stock' => 20.00,
             'min_stock_alert' => 25.00,
         ]);
 
@@ -123,6 +129,7 @@ class DatabaseSeeder extends Seeder
             'category' => 'ingredient',
             'unit' => 'kg',
             'current_stock' => 65.00,
+            'kitchen_stock' => 25.00,
             'min_stock_alert' => 20.00,
         ]);
 
@@ -132,6 +139,7 @@ class DatabaseSeeder extends Seeder
             'category' => 'ingredient',
             'unit' => 'kg',
             'current_stock' => 15.00,
+            'kitchen_stock' => 10.00,
             'min_stock_alert' => 5.00,
         ]);
 
@@ -141,6 +149,7 @@ class DatabaseSeeder extends Seeder
             'category' => 'ingredient',
             'unit' => 'kg',
             'current_stock' => 3.50, // Critical stock!
+            'kitchen_stock' => 15.00,
             'min_stock_alert' => 10.00,
         ]);
 
@@ -150,6 +159,7 @@ class DatabaseSeeder extends Seeder
             'category' => 'packaging',
             'unit' => 'pcs',
             'current_stock' => 1200.00,
+            'kitchen_stock' => 150.00,
             'min_stock_alert' => 300.00,
         ]);
 
@@ -159,6 +169,7 @@ class DatabaseSeeder extends Seeder
             'category' => 'packaging',
             'unit' => 'pcs',
             'current_stock' => 5000.00,
+            'kitchen_stock' => 500.00,
             'min_stock_alert' => 1000.00,
         ]);
 
@@ -168,6 +179,7 @@ class DatabaseSeeder extends Seeder
             'category' => 'packaging',
             'unit' => 'pcs',
             'current_stock' => 120.00, // Critical stock!
+            'kitchen_stock' => 50.00,
             'min_stock_alert' => 500.00,
         ]);
 
@@ -390,7 +402,7 @@ class DatabaseSeeder extends Seeder
 
         // 8. Create Production Runs
         // Run #1 (Completed today)
-        ProductionRun::create([
+        $pr1 = ProductionRun::create([
             'run_number' => 'PR-2026-0001',
             'product_id' => $gjBox->id,
             'quantity_produced' => 120.00,
@@ -399,9 +411,24 @@ class DatabaseSeeder extends Seeder
             'notes' => 'Completed morning shift run. Packed and ready for distribution.',
             'created_at' => Carbon::now(),
         ]);
+        ProductionRunMaterial::create([
+            'production_run_id' => $pr1->id,
+            'material_id' => $milk->id,
+            'quantity_used' => 40.00,
+        ]);
+        ProductionRunMaterial::create([
+            'production_run_id' => $pr1->id,
+            'material_id' => $sugar->id,
+            'quantity_used' => 15.00,
+        ]);
+        ProductionRunMaterial::create([
+            'production_run_id' => $pr1->id,
+            'material_id' => $jamunBase->id,
+            'quantity_used' => 10.00,
+        ]);
 
         // Run #2 (Completed yesterday)
-        ProductionRun::create([
+        $pr2 = ProductionRun::create([
             'run_number' => 'PR-2026-0002',
             'product_id' => $mangoCustard->id,
             'quantity_produced' => 80.00,
@@ -409,6 +436,21 @@ class DatabaseSeeder extends Seeder
             'status' => 'completed',
             'notes' => 'Batch #M04 tasted perfect. Cold storage stored.',
             'created_at' => Carbon::now()->subDay(),
+        ]);
+        ProductionRunMaterial::create([
+            'production_run_id' => $pr2->id,
+            'material_id' => $milk->id,
+            'quantity_used' => 25.00,
+        ]);
+        ProductionRunMaterial::create([
+            'production_run_id' => $pr2->id,
+            'material_id' => $sugar->id,
+            'quantity_used' => 10.00,
+        ]);
+        ProductionRunMaterial::create([
+            'production_run_id' => $pr2->id,
+            'material_id' => $strawberries->id,
+            'quantity_used' => 12.00,
         ]);
     }
 }

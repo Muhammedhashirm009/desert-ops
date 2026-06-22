@@ -17,6 +17,7 @@ class Material extends Model
         'category',
         'unit',
         'current_stock',
+        'kitchen_stock',
         'min_stock_alert',
     ];
 

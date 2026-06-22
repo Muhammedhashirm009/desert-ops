@@ -25,61 +25,100 @@
   </div>
 </div>
 
-<div class="row r-3-1" style="grid-template-columns: 1fr 300px; gap: 16px;">
-  <!-- Details Card -->
-  <div class="card">
-    <div class="ch">
-      <div class="ch-title">Production Run details</div>
+<div class="row r-3-1" style="grid-template-columns: 1fr 320px; gap: 16px;">
+  <!-- Left: Run Info & Materials Table -->
+  <div style="display: flex; flex-direction: column; gap: 16px;">
+    <!-- Batch details -->
+    <div class="card">
+      <div class="ch">
+        <div class="ch-title">Production Batch info</div>
+      </div>
+      <div class="cb">
+        <table style="border: none;">
+          <tbody>
+            <tr style="background: none;">
+              <td style="width: 25%; font-weight: 600; color: var(--txt3); border: none; padding: 8px 0;">Product prepared:</td>
+              <td style="font-weight: 700; color: var(--txt); border: none; padding: 8px 0;">
+                {{ $productionRun->product->name }} (SKU: {{ $productionRun->product->sku }})
+              </td>
+            </tr>
+            <tr style="background: none;">
+              <td style="font-weight: 600; color: var(--txt3); border: none; padding: 8px 0;">Quantity Prepared:</td>
+              <td style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--txt); border: none; padding: 8px 0;">
+                {{ number_format($productionRun->quantity_produced, 0) }} units
+              </td>
+            </tr>
+            <tr style="background: none;">
+              <td style="font-weight: 600; color: var(--txt3); border: none; padding: 8px 0;">Retail Value (Total):</td>
+              <td style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--green-tx); border: none; padding: 8px 0;">
+                ₹{{ number_format($productionRun->quantity_produced * $productionRun->product->retail_price, 2) }}
+              </td>
+            </tr>
+            @if($productionRun->notes)
+            <tr style="background: none;">
+              <td style="font-weight: 600; color: var(--txt3); border: none; padding: 8px 0;">Batch Notes:</td>
+              <td style="color: var(--txt2); font-style: italic; border: none; padding: 8px 0; white-space: pre-line;">
+                {{ $productionRun->notes }}
+              </td>
+            </tr>
+            @endif
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="cb">
-      <table style="border: none;">
-        <tbody>
-          <tr style="background: none;">
-            <td style="width: 25%; font-weight: 600; color: var(--txt3); border: none; padding: 10px 0;">Finished Product:</td>
-            <td style="font-weight: 700; color: var(--txt); border: none; padding: 10px 0;">
-              {{ $productionRun->product->name }} (SKU: {{ $productionRun->product->sku }})
-            </td>
-          </tr>
-          <tr style="background: none;">
-            <td style="font-weight: 600; color: var(--txt3); border: none; padding: 10px 0;">Quantity Prepared:</td>
-            <td style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--txt); border: none; padding: 10px 0;">
-              {{ number_format($productionRun->quantity_produced, 0) }} units
-            </td>
-          </tr>
-          <tr style="background: none;">
-            <td style="font-weight: 600; color: var(--txt3); border: none; padding: 10px 0;">Prepared Date:</td>
-            <td style="font-weight: 700; color: var(--txt); border: none; padding: 10px 0;">
-              {{ $productionRun->prepared_date->format('d F Y') }}
-            </td>
-          </tr>
-          <tr style="background: none;">
-            <td style="font-weight: 600; color: var(--txt3); border: none; padding: 10px 0;">Internal Notes:</td>
-            <td style="color: var(--txt2); font-style: italic; border: none; padding: 10px 0; white-space: pre-line;">
-              {{ $productionRun->notes ?? 'No batch comments entered.' }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+
+    <!-- Consumed Raw Materials -->
+    <div class="card">
+      <div class="ch">
+        <div class="ch-title">Consumed Raw Materials (Kitchen stock deduction)</div>
+      </div>
+      <div class="cb" style="padding: 0;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 25%;">SKU</th>
+              <th style="width: 50%;">Raw Material Name</th>
+              <th style="width: 25%; text-align: right;">Quantity Used</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($productionRun->materials as $runMat)
+            <tr>
+              <td class="mono">{{ $runMat->material->sku }}</td>
+              <td>
+                <div style="font-weight: 600; color: var(--txt);">{{ $runMat->material->name }}</div>
+                <div style="font-size: 11px; color: var(--txt3);">
+                  Kitchen stock: {{ number_format($runMat->material->kitchen_stock, 2) }} {{ $runMat->material->unit }}
+                </div>
+              </td>
+              <td class="mono font-semibold" style="text-align: right; padding-right: 20px;">
+                {{ number_format($runMat->quantity_used, 2) }} {{ $runMat->material->unit }}
+              </td>
+            </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <!-- Sidebar Actions -->
+  <!-- Right: Sidebar Actions -->
   <div style="display: flex; flex-direction: column; gap: 16px;">
     @if($productionRun->status === 'pending')
     <div class="card">
       <div class="ch">
-        <div class="ch-title">Production Status</div>
+        <div class="ch-title">Complete Batch Run</div>
       </div>
       <div class="cb">
         <p style="font-size: 12.5px; color: var(--txt2); margin-bottom: 15px;">
-          Confirm completion of this batch to update finished dessert stocks in the central kitchen inventory.
+          Completing this run consumes the listed raw materials from the <strong>Kitchen Stock</strong> and adds <strong>{{ number_format($productionRun->quantity_produced, 0) }} units</strong> of finished desserts to the central kitchen stock.
         </p>
         
         <div style="display: flex; flex-direction: column; gap: 10px;">
           <form action="{{ route('production-runs.complete', $productionRun->id) }}" method="POST">
             @csrf
             <button type="submit" class="btn-pri" style="width: 100%; justify-content: center; background: var(--green);">
-              Complete Production Run
+              Complete Run (Update Stock)
             </button>
           </form>
           
@@ -96,10 +135,14 @@
     @else
     <div class="card">
       <div class="ch">
-        <div class="ch-title">Inventory Updated</div>
+        <div class="ch-title">Production Run Finished</div>
       </div>
       <div class="cb" style="background: var(--green-lt); color: var(--green-tx); border-radius: 0 0 var(--radius) var(--radius); padding: 12px 16px; font-size: 13px;">
-        This production run is finalized. The stock of <strong>{{ $productionRun->product->name }}</strong> in the Central Kitchen has been incremented by <strong>{{ number_format($productionRun->quantity_produced, 0) }} units</strong> (Current total stock: {{ number_format($productionRun->product->current_kitchen_stock, 0) }} units).
+        <p style="font-weight: 600; margin-bottom: 8px;">Stock movements executed:</p>
+        <ul style="padding-left: 18px; line-height: 1.6;">
+          <li>Kitchen raw stocks decremented.</li>
+          <li>Finished goods stock (<strong>{{ $productionRun->product->name }}</strong>) incremented by <strong>{{ number_format($productionRun->quantity_produced, 0) }} units</strong> (Current total stock: {{ number_format($productionRun->product->current_kitchen_stock, 0) }} units).</li>
+        </ul>
       </div>
     </div>
     @endif

@@ -132,6 +132,10 @@ class MaterialRequestTest extends TestCase
         $this->material2->refresh();
         $this->assertEquals(40.00, $this->material1->current_stock); // 50 - 10
         $this->assertEquals(80.00, $this->material2->current_stock); // 100 - 20
+
+        // Verify kitchen stock incremented
+        $this->assertEquals(10.00, $this->material1->kitchen_stock); // 0 + 10
+        $this->assertEquals(20.00, $this->material2->kitchen_stock); // 0 + 20
     }
 
     public function test_cannot_release_exceeding_stock()
