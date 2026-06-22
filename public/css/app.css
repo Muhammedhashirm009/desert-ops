@@ -566,3 +566,85 @@ tbody tr:hover td{background:var(--row-hov);}
 .po-table th, .po-table td {
   padding: 8px 12px;
 }
+
+/* ── SEARCHABLE SELECT DROPDOWN ── */
+.searchable-select {
+  position: relative;
+  width: 100%;
+}
+.searchable-select-input {
+  width: 100%;
+  padding: 8px 12px;
+  padding-right: 32px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-b);
+  border-radius: var(--radius);
+  color: var(--txt);
+  font-family: inherit;
+  font-size: 13.5px;
+  outline: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.searchable-select-input:focus {
+  border-color: var(--btn);
+}
+.searchable-select-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  stroke: var(--txt3);
+  stroke-width: 2.5;
+  fill: none;
+  transition: transform 0.2s;
+}
+.searchable-select.open .searchable-select-arrow {
+  transform: translateY(-50%) rotate(180deg);
+}
+.searchable-select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+  background: var(--card);
+  border: 1px solid var(--div2);
+  border-radius: var(--radius);
+  box-shadow: var(--card-sh-md);
+  max-height: 220px;
+  overflow-y: auto;
+  margin-top: 4px;
+  display: none;
+}
+.searchable-select.open .searchable-select-dropdown {
+  display: block;
+}
+.searchable-select-option {
+  padding: 9px 12px;
+  cursor: pointer;
+  color: var(--txt);
+  transition: background 0.1s, color 0.1s;
+  font-size: 13px;
+  text-align: left;
+}
+.searchable-select-option:hover,
+.searchable-select-option.highlighted {
+  background: var(--acc-lt);
+  color: var(--acc-tx);
+}
+.searchable-select-option.selected {
+  background: var(--btn);
+  color: var(--btn-tx);
+  font-weight: 600;
+}
+.searchable-select-no-results {
+  padding: 10px 12px;
+  color: var(--txt3);
+  font-style: italic;
+  font-size: 12.5px;
+  text-align: center;
+}

@@ -63,7 +63,7 @@
         <div class="cb">
           <div class="form-grp">
             <label for="supplier_id">Select Supplier *</label>
-            <select name="supplier_id" id="supplier_id" class="form-input" required style="height: 38px;">
+            <select name="supplier_id" id="supplier_id" class="form-input searchable-select" required style="height: 38px;">
               <option value="">-- Choose Supplier --</option>
               @foreach($suppliers as $supplier)
                 <option value="{{ $supplier->id }}" {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>
@@ -147,6 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
         itemsContainer.appendChild(row);
         
         const select = row.querySelector('.material-select');
+        window.initSearchableSelect(select);
         const qty = row.querySelector('.qty-input');
         const price = row.querySelector('.price-input');
         const removeBtn = row.querySelector('.remove-row-btn');

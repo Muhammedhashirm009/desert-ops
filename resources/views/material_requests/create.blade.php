@@ -130,6 +130,7 @@ document.addEventListener('DOMContentLoaded', function() {
         itemsContainer.appendChild(row);
         
         const select = row.querySelector('.material-select');
+        window.initSearchableSelect(select);
         const removeBtn = row.querySelector('.remove-row-btn');
         const unitLbl = row.querySelector('.unit-lbl');
         

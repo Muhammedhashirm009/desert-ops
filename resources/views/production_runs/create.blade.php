@@ -60,7 +60,7 @@
         <div class="cb">
           <div class="form-grp">
             <label for="product_id">Finished Dessert Product *</label>
-            <select name="product_id" id="product_id" class="form-input" required style="height: 38px;">
+            <select name="product_id" id="product_id" class="form-input searchable-select" required style="height: 38px;">
               <option value="">-- Choose Dessert --</option>
               @foreach($products as $product)
                 <option value="{{ $product->id }}" {{ old('product_id') == $product->id ? 'selected' : '' }}>
@@ -148,6 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
         container.appendChild(row);
         
         const select = row.querySelector('.material-select');
+        window.initSearchableSelect(select);
         const remove = row.querySelector('.remove-row-btn');
         const label = row.querySelector('.unit-lbl');
         
