@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Product extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'sku',
+        'retail_price',
+        'current_kitchen_stock',
+    ];
+
+    protected $casts = [
+        'retail_price' => 'decimal:2',
+        'current_kitchen_stock' => 'decimal:2',
+    ];
+
+    public function productionRuns(): HasMany
+    {
+        return $this->hasMany(ProductionRun::class);
+    }
+}

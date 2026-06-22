@@ -65,7 +65,7 @@
         <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>12.4%
       </div>
     </div>
-    <div class="kpi-val"><sup>₹</sup>84,200</div>
+    <div class="kpi-val"><sup>₹</sup>{{ number_format($todaysProductionValue) }}</div>
     <div class="kpi-lbl">Today's Production Value</div>
     <div class="kpi-foot">
       <span class="kpi-foot-lbl">Yesterday</span>

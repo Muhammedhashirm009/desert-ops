@@ -9,6 +9,10 @@ use App\Models\PurchaseOrderItem;
 use App\Models\GoodsReceivedNote;
 use App\Models\GoodsReceivedNoteItem;
 use App\Models\User;
+use App\Models\Product;
+use App\Models\MaterialRequest;
+use App\Models\MaterialRequestItem;
+use App\Models\ProductionRun;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -317,5 +321,95 @@ class DatabaseSeeder extends Seeder
             'material_id' => $butter->id,
             'quantity_received' => 55.00,
         ]);
+        // 6. Create Dessert Products Catalog
+        $gjBox = Product::create([
+            'name' => 'Gulab Jamun Box',
+            'sku' => 'DSR-GJB-001',
+            'retail_price' => 250.00,
+            'current_kitchen_stock' => 120.00, // Stock will be updated by PR-0001
+        ]);
+
+        $mangoCustard = Product::create([
+            'name' => 'Mango Custard',
+            'sku' => 'DSR-MGC-002',
+            'retail_price' => 150.00,
+            'current_kitchen_stock' => 80.00, // Stock updated by PR-0002
+        ]);
+
+        $chocTruffle = Product::create([
+            'name' => 'Chocolate Truffle',
+            'sku' => 'DSR-CHT-003',
+            'retail_price' => 300.00,
+            'current_kitchen_stock' => 0.00,
+        ]);
+
+        // 7. Create Material Requests
+        // Request #1 (Released)
+        $mr1 = MaterialRequest::create([
+            'request_number' => 'MR-2026-0001',
+            'requested_by' => 'Chef Suresh',
+            'requested_date' => Carbon::now()->subDays(2),
+            'status' => 'released',
+            'notes' => 'For base preparation of Gulab Jamun batch.',
+            'created_at' => Carbon::now()->subDays(2),
+        ]);
+        MaterialRequestItem::create([
+            'material_request_id' => $mr1->id,
+            'material_id' => $milk->id,
+            'quantity_requested' => 50.00,
+            'quantity_released' => 50.00,
+        ]);
+        MaterialRequestItem::create([
+            'material_request_id' => $mr1->id,
+            'material_id' => $sugar->id,
+            'quantity_requested' => 20.00,
+            'quantity_released' => 20.00,
+        ]);
+
+        // Request #2 (Pending)
+        $mr2 = MaterialRequest::create([
+            'request_number' => 'MR-2026-0002',
+            'requested_by' => 'Head Baker Maria',
+            'requested_date' => Carbon::now(),
+            'status' => 'pending',
+            'notes' => 'Ingredients for Chocolate Truffle batch. Urgent release requested.',
+            'created_at' => Carbon::now(),
+        ]);
+        MaterialRequestItem::create([
+            'material_request_id' => $mr2->id,
+            'material_id' => $cocoa->id,
+            'quantity_requested' => 10.00,
+            'quantity_released' => 0.00,
+        ]);
+        MaterialRequestItem::create([
+            'material_request_id' => $mr2->id,
+            'material_id' => $butter->id,
+            'quantity_requested' => 15.00,
+            'quantity_released' => 0.00,
+        ]);
+
+        // 8. Create Production Runs
+        // Run #1 (Completed today)
+        ProductionRun::create([
+            'run_number' => 'PR-2026-0001',
+            'product_id' => $gjBox->id,
+            'quantity_produced' => 120.00,
+            'prepared_date' => Carbon::now(),
+            'status' => 'completed',
+            'notes' => 'Completed morning shift run. Packed and ready for distribution.',
+            'created_at' => Carbon::now(),
+        ]);
+
+        // Run #2 (Completed yesterday)
+        ProductionRun::create([
+            'run_number' => 'PR-2026-0002',
+            'product_id' => $mangoCustard->id,
+            'quantity_produced' => 80.00,
+            'prepared_date' => Carbon::now()->subDay(),
+            'status' => 'completed',
+            'notes' => 'Batch #M04 tasted perfect. Cold storage stored.',
+            'created_at' => Carbon::now()->subDay(),
+        ]);
     }
 }
+
