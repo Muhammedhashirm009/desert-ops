@@ -9,6 +9,9 @@ use App\Http\Controllers\GrnController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\MaterialRequestController;
 use App\Http\Controllers\ProductionRunController;
+use App\Http\Controllers\OutletController;
+use App\Http\Controllers\DispatchController;
+use App\Http\Controllers\SalesLogController;
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 Route::resource('suppliers', SupplierController::class);
@@ -28,5 +31,12 @@ Route::post('material-requests/{material_request}/release', [MaterialRequestCont
 Route::post('material-requests/{material_request}/reject', [MaterialRequestController::class, 'reject'])->name('material-requests.reject');
 Route::resource('production-runs', ProductionRunController::class);
 Route::post('production-runs/{production_run}/complete', [ProductionRunController::class, 'complete'])->name('production-runs.complete');
+
+// Module 3: Distribution & Outlets Routes
+Route::resource('outlets', OutletController::class);
+Route::resource('dispatches', DispatchController::class);
+Route::post('dispatches/{dispatch}/dispatch', [DispatchController::class, 'dispatch'])->name('dispatches.dispatch');
+Route::post('dispatches/{dispatch}/receive', [DispatchController::class, 'receive'])->name('dispatches.receive');
+Route::resource('sales-logs', SalesLogController::class);
 
 

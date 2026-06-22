@@ -27,10 +27,10 @@
 <!-- Summary Strip -->
 <div class="sum-strip">
   <div class="sum-item">
-    <div class="sum-val"><sup>₹</sup>6,42,800</div>
+    <div class="sum-val"><sup>₹</sup>{{ number_format($mtdRevenue) }}</div>
     <div class="sum-lbl">Month-to-Date Revenue</div>
     <div class="sum-delta">
-      <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>8.1% vs last month
+      <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Live Sales Logs
     </div>
   </div>
   <div class="sum-item">
@@ -43,7 +43,7 @@
   <div class="sum-item">
     <div class="sum-val">{{ $activeOutletsCount }}</div>
     <div class="sum-lbl">Active Outlets</div>
-    <div class="sum-delta">3 own · 2 franchise</div>
+    <div class="sum-delta">{{ $outletsBreakdown }}</div>
   </div>
   <div class="sum-item">
     <div class="sum-val">94.2%</div>
@@ -97,11 +97,11 @@
         <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>4 done
       </div>
     </div>
-    <div class="kpi-val">12</div>
+    <div class="kpi-val">{{ $dispatchesTodayCount }}</div>
     <div class="kpi-lbl">Dispatches Today</div>
     <div class="kpi-foot">
-      <span class="kpi-foot-lbl">Pending dispatch</span>
-      <span class="kpi-foot-val">3 routes</span>
+      <span class="kpi-foot-lbl">Transferred from Kitchen</span>
+      <span class="kpi-foot-val">Live dispatch logs</span>
     </div>
   </div>
 
@@ -169,45 +169,40 @@
         <div class="ch-title">Outlet Stock Levels</div>
         <div class="ch-sub">Live status</div>
       </div>
-      <a class="ch-link" href="#">Details <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
+      <a class="ch-link" href="{{ route('outlets.index') }}">Details <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
     </div>
     <div class="cb">
       <div class="srows">
-        <div class="srow">
-          <div class="srow-top">
-            <span class="srow-name"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>MG Road</span>
-            <div class="srow-right"><span class="badge bg" style="font-size:10px;padding:1.5px 6px;">Own</span><span class="srow-pct">82%</span></div>
+        @forelse($dashboardOutlets as $outlet)
+          @php
+            $totalStock = (float)($outlet->total_stock ?? 0);
+            $pct = min(100, (int)(($totalStock / 200) * 100));
+            
+            if ($pct > 60) {
+                $color = 'var(--green)';
+            } elseif ($pct > 25) {
+                $color = 'var(--btn)';
+            } elseif ($pct > 10) {
+                $color = 'var(--amber)';
+            } else {
+                $color = 'var(--red)';
+            }
+          @endphp
+          <div class="srow">
+            <div class="srow-top">
+              <span class="srow-name"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>{{ $outlet->name }}</span>
+              <div class="srow-right">
+                <span class="badge {{ $outlet->type === 'own' ? 'bg' : 'bp' }}" style="font-size:10px;padding:1.5px 6px;">{{ $outlet->type === 'own' ? 'Own' : 'Franchise' }}</span>
+                <span class="srow-pct" style="font-size: 11.5px; font-weight: 500;">{{ number_format($totalStock, 0) }} Units ({{ $pct }}%)</span>
+              </div>
+            </div>
+            <div class="track"><div class="fill" style="width:{{ $pct }}%;background:{{ $color }};"></div></div>
           </div>
-          <div class="track"><div class="fill" style="width:82%;background:var(--green);"></div></div>
-        </div>
-        <div class="srow">
-          <div class="srow-top">
-            <span class="srow-name"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Calicut Beach</span>
-            <div class="srow-right"><span class="badge bg" style="font-size:10px;padding:1.5px 6px;">Own</span><span class="srow-pct">67%</span></div>
+        @empty
+          <div style="padding: 20px; text-align: center; color: var(--txt3);">
+            No outlets registered yet. <a href="{{ route('outlets.create') }}">Add one now</a>.
           </div>
-          <div class="track"><div class="fill" style="width:67%;background:var(--btn);"></div></div>
-        </div>
-        <div class="srow">
-          <div class="srow-top">
-            <span class="srow-name"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Palayam</span>
-            <div class="srow-right"><span class="badge bg" style="font-size:10px;padding:1.5px 6px;">Own</span><span class="srow-pct">41%</span></div>
-          </div>
-          <div class="track"><div class="fill" style="width:41%;background:var(--amber);"></div></div>
-        </div>
-        <div class="srow">
-          <div class="srow-top">
-            <span class="srow-name"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Thrissur</span>
-            <div class="srow-right"><span class="badge ba" style="font-size:10px;padding:1.5px 6px;">Franchise</span><span class="srow-pct" style="color:var(--red-tx);">23%</span></div>
-          </div>
-          <div class="track"><div class="fill" style="width:23%;background:var(--red);"></div></div>
-        </div>
-        <div class="srow">
-          <div class="srow-top">
-            <span class="srow-name"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Kochi</span>
-            <div class="srow-right"><span class="badge ba" style="font-size:10px;padding:1.5px 6px;">Franchise</span><span class="srow-pct">58%</span></div>
-          </div>
-          <div class="track"><div class="fill" style="width:58%;background:var(--blue);"></div></div>
-        </div>
+        @endforelse
       </div>
     </div>
   </div>

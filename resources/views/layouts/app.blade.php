@@ -81,11 +81,20 @@
 
   <div class="sb-grp">
     <div class="sb-grp-label">Distribution</div>
-    <a href="#" class="nav-i" style="pointer-events: none; opacity: 0.5;">
-      <span class="ni"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>Outlet Dispatch (M3)
+    <a href="{{ route('outlets.index') }}" class="nav-i {{ request()->routeIs('outlets.*') ? 'on' : '' }}">
+      <span class="ni"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>Outlets Management
     </a>
-    <a href="#" class="nav-i" style="pointer-events: none; opacity: 0.5;">
-      <span class="ni"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>Franchise Orders (M3)
+    <a href="{{ route('dispatches.index') }}" class="nav-i {{ request()->routeIs('dispatches.*') ? 'on' : '' }}">
+      <span class="ni"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>Product Dispatches
+      @php
+        $pendingDispCount = \App\Models\Dispatch::where('status', 'pending')->count();
+      @endphp
+      @if($pendingDispCount > 0)
+        <span class="nb red">{{ $pendingDispCount }}</span>
+      @endif
+    </a>
+    <a href="{{ route('sales-logs.index') }}" class="nav-i {{ request()->routeIs('sales-logs.*') ? 'on' : '' }}">
+      <span class="ni"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Outlet Sales Logs
     </a>
   </div>
 

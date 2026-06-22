@@ -14,6 +14,12 @@ use App\Models\MaterialRequest;
 use App\Models\MaterialRequestItem;
 use App\Models\ProductionRun;
 use App\Models\ProductionRunMaterial;
+use App\Models\Outlet;
+use App\Models\OutletStock;
+use App\Models\Dispatch;
+use App\Models\DispatchItem;
+use App\Models\SalesLog;
+use App\Models\SalesLogItem;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -451,6 +457,197 @@ class DatabaseSeeder extends Seeder
             'production_run_id' => $pr2->id,
             'material_id' => $strawberries->id,
             'quantity_used' => 12.00,
+        ]);
+
+        // 9. Create Outlets
+        $mgRoad = Outlet::create([
+            'name' => 'MG Road Outlet',
+            'type' => 'own',
+            'commission_rate' => 0.00,
+            'contact_person' => 'Sanjay Dutt',
+            'phone' => '+91 9988776655',
+            'address' => 'Shop G-12, City Centre Mall, MG Road, Calicut',
+        ]);
+
+        $beach = Outlet::create([
+            'name' => 'Calicut Beach Outlet',
+            'type' => 'own',
+            'commission_rate' => 0.00,
+            'contact_person' => 'Preethi Nair',
+            'phone' => '+91 9898989898',
+            'address' => 'Beach Road Container Yard, Calicut Beach',
+        ]);
+
+        $palayam = Outlet::create([
+            'name' => 'Palayam Junction Outlet',
+            'type' => 'own',
+            'commission_rate' => 0.00,
+            'contact_person' => 'Ramesh Kumar',
+            'phone' => '+91 8877665544',
+            'address' => 'Kozhikode Palayam Market Road, Calicut',
+        ]);
+
+        $thrissur = Outlet::create([
+            'name' => 'Thrissur Franchise',
+            'type' => 'franchise',
+            'commission_rate' => 15.00,
+            'contact_person' => 'Vipul Krishnan',
+            'phone' => '+91 7766554433',
+            'address' => 'Opposite Swaraj Round West, Thrissur',
+        ]);
+
+        $kochi = Outlet::create([
+            'name' => 'Kochi Lulu Mall Franchise',
+            'type' => 'franchise',
+            'commission_rate' => 12.00,
+            'contact_person' => 'Fahad Faasil',
+            'phone' => '+91 6655443322',
+            'address' => 'Food Court Level 3, Lulu Mall, Kochi',
+        ]);
+
+        // 10. Seed Outlet Stocks
+        OutletStock::create([
+            'outlet_id' => $mgRoad->id,
+            'product_id' => $gjBox->id,
+            'quantity' => 80.00,
+        ]);
+        OutletStock::create([
+            'outlet_id' => $mgRoad->id,
+            'product_id' => $mangoCustard->id,
+            'quantity' => 60.00,
+        ]);
+        OutletStock::create([
+            'outlet_id' => $beach->id,
+            'product_id' => $gjBox->id,
+            'quantity' => 40.00,
+        ]);
+        OutletStock::create([
+            'outlet_id' => $beach->id,
+            'product_id' => $chocTruffle->id,
+            'quantity' => 35.00,
+        ]);
+        OutletStock::create([
+            'outlet_id' => $thrissur->id,
+            'product_id' => $gjBox->id,
+            'quantity' => 15.00,
+        ]);
+        OutletStock::create([
+            'outlet_id' => $thrissur->id,
+            'product_id' => $mangoCustard->id,
+            'quantity' => 12.00,
+        ]);
+        OutletStock::create([
+            'outlet_id' => $kochi->id,
+            'product_id' => $chocTruffle->id,
+            'quantity' => 50.00,
+        ]);
+
+        // 11. Create Dispatch Shipment Records
+        // Dispatch #1: Delivered
+        $disp1 = Dispatch::create([
+            'dispatch_number' => 'DISP-2026-0001',
+            'outlet_id' => $mgRoad->id,
+            'dispatch_date' => Carbon::now()->subDays(3),
+            'status' => 'received',
+            'notes' => 'Bulk weekend shipment. Temperature controlled courier.',
+            'created_at' => Carbon::now()->subDays(3),
+        ]);
+        DispatchItem::create([
+            'dispatch_id' => $disp1->id,
+            'product_id' => $gjBox->id,
+            'quantity' => 50.00,
+        ]);
+        DispatchItem::create([
+            'dispatch_id' => $disp1->id,
+            'product_id' => $mangoCustard->id,
+            'quantity' => 30.00,
+        ]);
+
+        // Dispatch #2: Dispatched (In Transit)
+        $disp2 = Dispatch::create([
+            'dispatch_number' => 'DISP-2026-0002',
+            'outlet_id' => $thrissur->id,
+            'dispatch_date' => Carbon::now()->subDay(),
+            'status' => 'dispatched',
+            'notes' => 'Franchise restock. Dispatched via BlueDart.',
+            'created_at' => Carbon::now()->subDay(),
+        ]);
+        DispatchItem::create([
+            'dispatch_id' => $disp2->id,
+            'product_id' => $gjBox->id,
+            'quantity' => 20.00,
+        ]);
+
+        // Dispatch #3: Pending
+        $disp3 = Dispatch::create([
+            'dispatch_number' => 'DISP-2026-0003',
+            'outlet_id' => $beach->id,
+            'dispatch_date' => Carbon::now(),
+            'status' => 'pending',
+            'notes' => 'Awaiting chocolate truffle batch preparation.',
+            'created_at' => Carbon::now(),
+        ]);
+        DispatchItem::create([
+            'dispatch_id' => $disp3->id,
+            'product_id' => $chocTruffle->id,
+            'quantity' => 10.00,
+        ]);
+
+        // 12. Create Sales Logs
+        // Log #1: Own Outlet (100% earnings)
+        $sales1 = SalesLog::create([
+            'outlet_id' => $mgRoad->id,
+            'log_date' => Carbon::now()->subDays(2),
+            'created_at' => Carbon::now()->subDays(2),
+        ]);
+        SalesLogItem::create([
+            'sales_log_id' => $sales1->id,
+            'product_id' => $gjBox->id,
+            'quantity_sold' => 12.00,
+            'unit_price' => $gjBox->retail_price,
+            'total_revenue' => 12.00 * $gjBox->retail_price,
+            'commission_amount' => 0.00,
+            'net_revenue' => 12.00 * $gjBox->retail_price,
+        ]);
+        SalesLogItem::create([
+            'sales_log_id' => $sales1->id,
+            'product_id' => $mangoCustard->id,
+            'quantity_sold' => 8.00,
+            'unit_price' => $mangoCustard->retail_price,
+            'total_revenue' => 8.00 * $mangoCustard->retail_price,
+            'commission_amount' => 0.00,
+            'net_revenue' => 8.00 * $mangoCustard->retail_price,
+        ]);
+
+        // Log #2: Franchise Outlet (15% commission cut)
+        $sales2 = SalesLog::create([
+            'outlet_id' => $thrissur->id,
+            'log_date' => Carbon::now()->subDay(),
+            'created_at' => Carbon::now()->subDay(),
+        ]);
+        
+        $rev1 = 5.00 * $gjBox->retail_price;
+        $comm1 = $rev1 * 0.15;
+        SalesLogItem::create([
+            'sales_log_id' => $sales2->id,
+            'product_id' => $gjBox->id,
+            'quantity_sold' => 5.00,
+            'unit_price' => $gjBox->retail_price,
+            'total_revenue' => $rev1,
+            'commission_amount' => $comm1,
+            'net_revenue' => $rev1 - $comm1,
+        ]);
+        
+        $rev2 = 4.00 * $mangoCustard->retail_price;
+        $comm2 = $rev2 * 0.15;
+        SalesLogItem::create([
+            'sales_log_id' => $sales2->id,
+            'product_id' => $mangoCustard->id,
+            'quantity_sold' => 4.00,
+            'unit_price' => $mangoCustard->retail_price,
+            'total_revenue' => $rev2,
+            'commission_amount' => $comm2,
+            'net_revenue' => $rev2 - $comm2,
         ]);
     }
 }
