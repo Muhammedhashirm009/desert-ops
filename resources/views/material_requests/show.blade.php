@@ -36,7 +36,7 @@
       <div class="ch-title">Requested Line Items</div>
     </div>
     
-    @if($materialRequest->status === 'approved')
+    @if($materialRequest->status === 'approved' && in_array(auth()->user()->role, ['admin', 'gm', 'store_manager']))
       <!-- Store Manager Release Form -->
       <form action="{{ route('material-requests.release', $materialRequest->id) }}" method="POST">
         @csrf
@@ -123,7 +123,7 @@
   <!-- Actions & Sidebar info -->
   <div style="display: flex; flex-direction: column; gap: 16px;">
     <!-- Workflow Actions for Store Manager -->
-    @if($materialRequest->status === 'pending')
+    @if($materialRequest->status === 'pending' && in_array(auth()->user()->role, ['admin', 'gm', 'store_manager']))
     <div class="card">
       <div class="ch">
         <div class="ch-title">Request Review</div>
@@ -152,7 +152,7 @@
     </div>
     @endif
 
-    @if($materialRequest->status === 'approved')
+    @if($materialRequest->status === 'approved' && in_array(auth()->user()->role, ['admin', 'gm', 'store_manager']))
     <div class="card">
       <div class="ch">
         <div class="ch-title">Reject Request</div>
@@ -168,6 +168,7 @@
     </div>
     @endif
 
+    @if(auth()->user()->role !== 'kitchen_chef')
     <div class="card">
       <div class="ch">
         <div class="ch-title">Request Notes</div>
@@ -178,6 +179,7 @@
         </p>
       </div>
     </div>
+    @endif
   </div>
 </div>
 @endsection

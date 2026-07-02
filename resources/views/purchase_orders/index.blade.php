@@ -44,7 +44,7 @@
     </div>
     <div class="ch-title">Procurement History</div>
   </div>
-  <table>
+  <table class="tbl">
     <thead>
       <tr>
         <th>PO No.</th>
@@ -59,14 +59,14 @@
     <tbody>
       @forelse($purchaseOrders as $po)
       <tr>
-        <td class="mono font-semibold">{{ $po->po_number }}</td>
-        <td>
+        <td data-label="PO No." class="mono font-semibold">{{ $po->po_number }}</td>
+        <td data-label="Supplier">
           <div class="td-name">{{ $po->supplier->name }}</div>
           <div class="td-meta">{{ $po->items->count() }} items</div>
         </td>
-        <td class="mono font-semibold">₹{{ number_format($po->total_amount, 2) }}</td>
-        <td class="mono td2">{{ $po->eta ? $po->eta->format('d M Y') : '—' }}</td>
-        <td>
+        <td data-label="Total Amount" class="mono font-semibold">₹{{ number_format($po->total_amount, 2) }}</td>
+        <td data-label="ETA" class="mono td2">{{ $po->eta ? $po->eta->format('d M Y') : '—' }}</td>
+        <td data-label="Status">
           @if($po->status === 'received')
             <span class="badge bg"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Received</span>
           @elseif($po->status === 'cancelled')
@@ -75,8 +75,8 @@
             <span class="badge ba"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Pending</span>
           @endif
         </td>
-        <td class="td3 mono">{{ $po->created_at->format('d M Y h:i A') }}</td>
-        <td>
+        <td data-label="Created Date" class="td3 mono">{{ $po->created_at->format('d M Y h:i A') }}</td>
+        <td data-label="Action">
           <a href="{{ route('purchase-orders.show', $po->id) }}" class="td-act">
             <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             View Details

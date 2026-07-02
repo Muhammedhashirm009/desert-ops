@@ -16,6 +16,14 @@
   </div>
 </div>
 
+@if($dispatch->status === 'cancelled')
+  <div class="alert alert-danger mb-4" style="display:flex; align-items:center; gap:8px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" style="width:16px; height:16px; color:var(--red-tx)"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    <div style="font-size: 13px; font-weight: 600; color: var(--red-tx);">
+      This dispatch request has been CANCELLED and will not be processed.
+    </div>
+  </div>
+@else
 <!-- Step Tracker -->
 <div class="card mb-4" style="padding: 20px;">
   <div class="steps">
@@ -60,6 +68,7 @@
     </div>
   </div>
 </div>
+@endif
 
 <div class="row r-3-1" style="grid-template-columns: 1fr 340px; gap: 16px;">
   <!-- Left Panel: Product Details -->
@@ -80,11 +89,23 @@
       </thead>
       <tbody>
         @foreach($dispatch->items as $item)
+        @php
+          $isProduct = (bool)$item->product_id;
+          $sku = $isProduct ? $item->product->sku : $item->material->sku;
+          $name = $isProduct ? $item->product->name : $item->material->name;
+          $qty = $item->quantity;
+          $unit = $isProduct ? 'Units' : 'Pieces';
+        @endphp
         <tr>
-          <td class="mono">{{ $item->product->sku }}</td>
-          <td style="font-weight:600;">{{ $item->product->name }}</td>
+          <td class="mono">{{ $sku }}</td>
+          <td style="font-weight:600;">
+            {{ $name }}
+            @if(!$isProduct)
+              <span style="font-size:11px; font-weight:normal; color:var(--txt3);"> (Packaging)</span>
+            @endif
+          </td>
           <td class="mono font-semibold" style="text-align: right; color: var(--blue-tx); font-weight: 600;">
-            {{ number_format($item->quantity, 0) }} Units
+            {{ number_format($qty, 0) }} {{ $unit }}
           </td>
         </tr>
         @endforeach
@@ -138,17 +159,30 @@
           <div class="alert alert-danger mt-4" style="font-size: 11.5px; padding: 8px 10px; margin-bottom:0; font-weight:normal; line-height:1.4;">
             <b>Attention:</b> Marking as dispatched will immediately verify and deduct stock from the **Central Kitchen Finished Goods** inventory.
           </div>
+          <div style="margin-top: 12px; text-align: center;">
+            <form action="{{ route('dispatches.destroy', $dispatch->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="btn-ghost" style="color: var(--red-tx); font-weight: 600; font-size: 12px;">Cancel Order</button>
+            </form>
+          </div>
+
+        @elseif($dispatch->status === 'cancelled')
+          <div class="alert alert-danger" style="margin-bottom:0; display:flex; align-items:center; gap:8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" style="width:16px; height:16px; color:var(--red-tx)"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <div style="font-size: 12.5px; line-height:1.3;">
+              <b style="color:var(--red-tx)">Order Cancelled</b>
+              <div style="font-size:11px; font-weight:normal; color:var(--txt2); margin-top:2px;">This product request was cancelled and rejected by the admin.</div>
+            </div>
+          </div>
 
         @elseif($dispatch->status === 'dispatched')
-          <form action="{{ route('dispatches.receive', $dispatch->id) }}" method="POST">
-            @csrf
-            <button type="submit" class="btn-pri" style="width: 100%; justify-content: center; padding: 10px; background:var(--green); color:#fff;">
-              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              Mark as Received
-            </button>
-          </form>
-          <div class="alert alert-success mt-4" style="font-size: 11.5px; padding: 8px 10px; margin-bottom:0; font-weight:normal; line-height:1.4; border-color: var(--green);">
-            <b>Note:</b> Confirm receipt when the shipment arrives at the outlet. This action adds the quantities directly to the **Outlet's Local Stock**.
+          <div class="alert alert-success" style="margin-bottom:0; display:flex; align-items:center; gap:8px; border-color: var(--blue);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" style="width:16px; height:16px; color:var(--blue-tx)"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            <div style="font-size: 12.5px; line-height:1.3;">
+              <b style="color:var(--blue-tx)">In Transit</b>
+              <div style="font-size:11px; font-weight:normal; color:var(--txt2); margin-top:2px;">Confirm receipt via the dedicated <b>Outlet Portal</b>.</div>
+            </div>
           </div>
 
         @else
@@ -164,4 +198,31 @@
     </div>
   </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+(function() {
+    const dispatchId = {{ $dispatch->id }};
+    const currentStatus = '{{ $dispatch->status }}';
+    
+    // Only poll if the dispatch is in a transitional state
+    if (currentStatus === 'received' || currentStatus === 'cancelled') return;
+
+    let pollInterval = setInterval(function() {
+        fetch('/api/dispatches/' + dispatchId + '/status', {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status !== currentStatus) {
+                // Status changed! Reload the page to update tracking bar & actions
+                clearInterval(pollInterval);
+                window.location.reload();
+            }
+        })
+        .catch(() => {}); // Silently ignore network errors
+    }, 5000); // Poll every 5 seconds
+})();
+</script>
 @endsection

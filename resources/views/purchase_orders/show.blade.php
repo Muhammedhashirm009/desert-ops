@@ -68,10 +68,41 @@
   font-weight: 600;
   color: var(--txt);
 }
+@media (max-width: 768px) {
+  .po-details-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
 </style>
 @endsection
 
 @section('content')
+@php
+  $poMsg = "*PURCHASE ORDER: " . $purchaseOrder->po_number . "*\n";
+  $poMsg .= "------------------------------\n";
+  $poMsg .= "*Supplier:* " . $purchaseOrder->supplier->name . "\n";
+  $poMsg .= "*Date:* " . $purchaseOrder->created_at->format('d F Y') . "\n";
+  $poMsg .= "*Estimated Delivery:* " . ($purchaseOrder->eta ? $purchaseOrder->eta->format('d F Y') : 'Immediate') . "\n";
+  $poMsg .= "*Total Amount:* ₹" . number_format($purchaseOrder->total_amount, 2) . "\n\n";
+
+  $poMsg .= "*Line Items:*\n";
+  foreach($purchaseOrder->items as $item) {
+      $poMsg .= "• " . $item->material->name . " (" . $item->material->sku . ")\n";
+      $poMsg .= "  Qty: " . number_format($item->quantity, 2) . " " . $item->material->unit . " @ ₹" . number_format($item->unit_price, 2) . " (Subtotal: ₹" . number_format($item->subtotal, 2) . ")\n";
+  }
+
+  if($purchaseOrder->notes) {
+      $poMsg .= "\n*Notes:* " . $purchaseOrder->notes . "\n";
+  }
+
+  $poMsg .= "\nGenerated via DessertOps ERP.";
+  
+  $phone = $purchaseOrder->supplier->phone ?? '';
+  $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+  $whatsappUrl = "https://api.whatsapp.com/send?" . ($cleanPhone ? "phone=" . urlencode($cleanPhone) . "&" : "") . "text=" . rawurlencode($poMsg);
+@endphp
+
 <!-- Page Header -->
 <div class="ph">
   <div>
@@ -90,6 +121,18 @@
     </div>
   </div>
   <div class="ph-acts">
+    <button onclick="copyToClipboard({{ json_encode($poMsg) }});" class="btn-pri" style="background: var(--blue-tx); border-color: var(--blue-tx); color: #fff; display: inline-flex; align-items: center; cursor: pointer; border: none; margin-right: 8px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; margin-right: 6px; vertical-align: middle;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+      Copy PO Text
+    </button>
+
+    <a href="{{ $whatsappUrl }}" target="_blank" class="btn-pri" style="background: #25D366; border-color: #25D366; color: #fff; display: inline-flex; align-items: center; text-decoration: none;">
+      <svg viewBox="0 0 24 24" fill="currentColor" style="width: 16px; height: 16px; margin-right: 6px; vertical-align: middle;">
+        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.717-1.458L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.863-9.864.001-2.63-1.019-5.105-2.875-6.964-1.856-1.854-4.321-2.877-6.953-2.878-5.438 0-9.863 4.42-9.867 9.867-.001 1.986.518 3.926 1.502 5.642l-.99 3.616 3.701-.97c1.602.874 3.19 1.348 4.799 1.348zm8.686-7.02c-.276-.138-1.637-.808-1.89-.9-.253-.093-.437-.138-.62.138-.184.276-.713.9-.873 1.085-.16.184-.32.207-.597.069-.276-.138-1.168-.43-2.227-1.374-.823-.734-1.378-1.643-1.54-1.92-.162-.276-.017-.425.121-.562.124-.124.276-.322.414-.483.138-.161.184-.276.276-.46.092-.184.046-.345-.023-.483-.069-.138-.62-1.493-.849-2.046-.224-.537-.45-.463-.62-.472-.16-.008-.344-.01-.528-.01-.184 0-.483.069-.736.345-.253.276-.966.943-.966 2.3 0 1.357.988 2.668 1.126 2.852.138.184 1.944 2.97 4.71 4.16.659.283 1.173.452 1.575.58.662.21 1.265.18 1.741.11.53-.08 1.637-.67 1.867-1.318.23-.647.23-1.2.16-1.317-.07-.12-.25-.18-.53-.318z"/>
+      </svg>
+      Send via WhatsApp
+    </a>
+
     <button onclick="window.print();" class="btn-ghost">
       <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       Print PO
@@ -239,4 +282,61 @@
     </div>
   </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+function copyToClipboard(text) {
+    if (!navigator.clipboard) {
+        // Fallback for older browsers or non-https contexts
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed'; // Avoid scrolling to bottom
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            showCopyAlert();
+        } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+        }
+        document.body.removeChild(textarea);
+        return;
+    }
+    navigator.clipboard.writeText(text).then(function() {
+        showCopyAlert();
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+
+function showCopyAlert() {
+    const alertDiv = document.createElement('div');
+    alertDiv.style.position = 'fixed';
+    alertDiv.style.bottom = '24px';
+    alertDiv.style.right = '24px';
+    alertDiv.style.background = '#25D366';
+    alertDiv.style.color = '#fff';
+    alertDiv.style.padding = '12px 24px';
+    alertDiv.style.borderRadius = 'var(--radius)';
+    alertDiv.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)';
+    alertDiv.style.zIndex = '99999';
+    alertDiv.style.fontSize = '14px';
+    alertDiv.style.fontWeight = '600';
+    alertDiv.style.display = 'flex';
+    alertDiv.style.alignItems = 'center';
+    alertDiv.style.gap = '8px';
+    alertDiv.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;"><polyline points="20 6 9 17 4 12"/></svg>
+        PO Copied for WhatsApp!
+    `;
+    document.body.appendChild(alertDiv);
+    setTimeout(() => {
+        alertDiv.style.opacity = '0';
+        alertDiv.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => alertDiv.remove(), 500);
+    }, 2500);
+}
+</script>
 @endsection

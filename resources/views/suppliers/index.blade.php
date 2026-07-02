@@ -24,10 +24,11 @@
     </div>
     <div class="ch-title">All Registered Suppliers</div>
   </div>
-  <table>
+  <table class="tbl">
     <thead>
       <tr>
         <th>Name</th>
+        <th>Materials</th>
         <th>Contact Person</th>
         <th>Email</th>
         <th>Phone</th>
@@ -38,12 +39,13 @@
     <tbody>
       @forelse($suppliers as $supplier)
       <tr>
-        <td class="td-name">{{ $supplier->name }}</td>
-        <td>{{ $supplier->contact_person ?? '—' }}</td>
-        <td class="mono">{{ $supplier->email ?? '—' }}</td>
-        <td class="mono">{{ $supplier->phone ?? '—' }}</td>
-        <td>{{ Str::limit($supplier->address, 50) ?? '—' }}</td>
-        <td>
+        <td data-label="Name" class="td-name"><a href="{{ route('suppliers.show', $supplier->id) }}" style="color:var(--txt); text-decoration:none; font-weight:600;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{{ $supplier->name }}</a></td>
+        <td data-label="Materials">@if($supplier->materials_count > 0)<span class="badge bb">{{ $supplier->materials_count }} linked</span>@else<span style="color:var(--txt3); font-size:12px;">None</span>@endif</td>
+        <td data-label="Contact Person">{{ $supplier->contact_person ?? '—' }}</td>
+        <td data-label="Email" class="mono">{{ $supplier->email ?? '—' }}</td>
+        <td data-label="Phone" class="mono">{{ $supplier->phone ?? '—' }}</td>
+        <td data-label="Address">{{ Str::limit($supplier->address, 50) ?? '—' }}</td>
+        <td data-label="Actions">
           <div style="display: flex; gap: 10px;">
             <a href="{{ route('suppliers.edit', $supplier->id) }}" class="td-act">
               <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -62,7 +64,7 @@
       </tr>
       @empty
       <tr>
-        <td colspan="6" class="text-center td2">No suppliers registered yet. <a href="{{ route('suppliers.create') }}">Create one now</a>.</td>
+        <td colspan="7" class="text-center td2">No suppliers registered yet. <a href="{{ route('suppliers.create') }}">Create one now</a>.</td>
       </tr>
       @endforelse
     </tbody>

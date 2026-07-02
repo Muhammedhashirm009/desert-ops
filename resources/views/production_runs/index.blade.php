@@ -24,7 +24,7 @@
     </div>
     <div class="ch-title">Production Runs History</div>
   </div>
-  <table>
+  <table class="tbl">
     <thead>
       <tr>
         <th>Run No.</th>
@@ -39,24 +39,24 @@
     <tbody>
       @forelse($productionRuns as $run)
       <tr>
-        <td class="mono font-semibold">{{ $run->run_number }}</td>
-        <td>
+        <td data-label="Run No." class="mono font-semibold">{{ $run->run_number }}</td>
+        <td data-label="Product Prepared">
           <div class="td-name">{{ $run->product->name }}</div>
           <div class="td-meta">SKU: {{ $run->product->sku }}</div>
         </td>
-        <td class="mono font-semibold" style="text-align: right; padding-right: 20px;">
+        <td data-label="Quantity Produced" class="mono font-semibold" style="text-align: right; padding-right: 20px;">
           {{ number_format($run->quantity_produced, 0) }} units
         </td>
-        <td>
+        <td data-label="Status">
           @if($run->status === 'completed')
             <span class="badge bg"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Completed</span>
           @else
             <span class="badge ba"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Pending Completion</span>
           @endif
         </td>
-        <td class="mono td3">{{ $run->prepared_date->format('d M Y') }}</td>
-        <td class="mono td3">{{ $run->created_at->format('d M Y h:i A') }}</td>
-        <td>
+        <td data-label="Prepared Date" class="mono td3">{{ $run->prepared_date->format('d M Y') }}</td>
+        <td data-label="Created Date" class="mono td3">{{ $run->created_at->format('d M Y h:i A') }}</td>
+        <td data-label="Action">
           <a href="{{ route('production-runs.show', $run->id) }}" class="td-act">
             <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             View Details

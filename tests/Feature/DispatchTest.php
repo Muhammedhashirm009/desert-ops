@@ -118,33 +118,77 @@ class DispatchTest extends TestCase
         $this->assertEquals(50.00, $this->product->current_kitchen_stock);
     }
 
-    public function test_can_receive_shipment_increments_outlet_stock()
+    public function test_can_list_outlet_orders()
     {
         $dispatch = Dispatch::create([
-            'dispatch_number' => 'DISP-2026-0003',
+            'dispatch_number' => 'DISP-2026-9999',
             'outlet_id' => $this->outlet->id,
             'dispatch_date' => now(),
-            'status' => 'dispatched',
+            'status' => 'pending',
         ]);
 
-        DispatchItem::create([
-            'dispatch_id' => $dispatch->id,
-            'product_id' => $this->product->id,
-            'quantity' => 20.00,
+        $response = $this->get(route('dispatches.orders'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Pending Store Orders');
+        $response->assertSee('DISP-2026-9999');
+        $response->assertSee('MG Road Outlet');
+    }
+
+    public function test_can_cancel_outlet_order_and_lists_cancelled_orders()
+    {
+        $dispatch = Dispatch::create([
+            'dispatch_number' => 'DISP-2026-8888',
+            'outlet_id' => $this->outlet->id,
+            'dispatch_date' => now(),
+            'status' => 'pending',
         ]);
 
-        $response = $this->post(route('dispatches.receive', $dispatch->id));
-
-        $response->assertRedirect(route('dispatches.show', $dispatch->id));
+        // Cancel order
+        $response = $this->delete(route('dispatches.destroy', $dispatch->id));
+        $response->assertRedirect();
+        
         $dispatch->refresh();
-        $this->assertEquals('received', $dispatch->status);
+        $this->assertEquals('cancelled', $dispatch->status);
 
-        // Verify outlet stock incremented from 0 to 20
-        $outletStock = OutletStock::where('outlet_id', $this->outlet->id)
-            ->where('product_id', $this->product->id)
-            ->first();
-            
-        $this->assertNotNull($outletStock);
-        $this->assertEquals(20.00, $outletStock->quantity);
+        // Verify cancelled order is visible on /outlet-orders
+        $ordersResponse = $this->get(route('dispatches.orders'));
+        $ordersResponse->assertSee('Recently Cancelled Orders');
+        $ordersResponse->assertSee('DISP-2026-8888');
+    }
+
+    public function test_outlet_orders_displays_total_requirements_summary()
+    {
+        $dispatch1 = Dispatch::create([
+            'dispatch_number' => 'DISP-2026-7771',
+            'outlet_id' => $this->outlet->id,
+            'dispatch_date' => now(),
+            'status' => 'pending',
+        ]);
+        DispatchItem::create([
+            'dispatch_id' => $dispatch1->id,
+            'product_id' => $this->product->id,
+            'quantity' => 12.00,
+        ]);
+
+        $dispatch2 = Dispatch::create([
+            'dispatch_number' => 'DISP-2026-7772',
+            'outlet_id' => $this->outlet->id,
+            'dispatch_date' => now(),
+            'status' => 'pending',
+        ]);
+        DispatchItem::create([
+            'dispatch_id' => $dispatch2->id,
+            'product_id' => $this->product->id,
+            'quantity' => 8.00,
+        ]);
+
+        // Total should be 20 Units of Gulab Jamun Box
+        $response = $this->get(route('dispatches.orders'));
+        $response->assertStatus(200);
+        $response->assertSee('Fulfillment Requirements Summary');
+        $response->assertSee('20 Units');
+        $response->assertSee('Gulab Jamun Box');
     }
 }
+

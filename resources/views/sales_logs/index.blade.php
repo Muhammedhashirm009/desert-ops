@@ -10,9 +10,8 @@
     <div class="ph-sub">View daily sales reports logged by retail outlets and calculated franchise commissions</div>
   </div>
   <div class="ph-acts">
-    <a href="{{ route('sales-logs.create') }}" class="btn-pri">
-      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Log Daily Sales
+    <a href="{{ route('portal.login') }}" class="btn-pri">
+      Go to Outlet Portal
     </a>
   </div>
 </div>
@@ -40,7 +39,7 @@
     </div>
     <div class="ch-title">Sales Reports Log</div>
   </div>
-  <table>
+  <table class="tbl">
     <thead>
       <tr>
         <th>Report Date</th>
@@ -55,33 +54,33 @@
     <tbody>
       @forelse($salesLogs as $log)
       <tr>
-        <td class="mono font-semibold" style="font-weight: 600;">
+        <td data-label="Report Date" class="mono font-semibold" style="font-weight: 600;">
           <a href="{{ route('sales-logs.show', $log->id) }}" style="color:inherit; text-decoration:none;">
             {{ $log->log_date->format('Y-m-d') }}
           </a>
         </td>
-        <td>
+        <td data-label="Outlet Name">
           <a href="{{ route('outlets.show', $log->outlet_id) }}" style="color:inherit; text-decoration:none; font-weight:600;">
             {{ $log->outlet->name }}
           </a>
         </td>
-        <td>
+        <td data-label="Type">
           @if($log->outlet->type === 'own')
             <span class="badge bg">Own Outlet</span>
           @else
             <span class="badge bp">Franchise</span>
           @endif
         </td>
-        <td class="mono" style="text-align: right; font-weight:600;">₹{{ number_format($log->total_revenue, 2) }}</td>
-        <td class="mono" style="text-align: right; color: var(--purple-tx);">
+        <td data-label="Gross Sales" class="mono" style="text-align: right; font-weight:600;">₹{{ number_format($log->total_revenue, 2) }}</td>
+        <td data-label="Commission Cut" class="mono" style="text-align: right; color: var(--purple-tx);">
           @if($log->outlet->type === 'franchise')
             ₹{{ number_format($log->commission_amount, 2) }}
           @else
             <span class="td3">—</span>
           @endif
         </td>
-        <td class="mono" style="text-align: right; color: var(--green-tx); font-weight: 600;">₹{{ number_format($log->net_revenue, 2) }}</td>
-        <td>
+        <td data-label="Net Kitchen Revenue" class="mono" style="text-align: right; color: var(--green-tx); font-weight: 600;">₹{{ number_format($log->net_revenue, 2) }}</td>
+        <td data-label="Actions">
           <div style="display: flex; gap: 10px; justify-content: flex-end;">
             <a href="{{ route('sales-logs.show', $log->id) }}" class="td-act">
               <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -100,7 +99,7 @@
       </tr>
       @empty
       <tr>
-        <td colspan="7" class="text-center td2">No sales logged yet. <a href="{{ route('sales-logs.create') }}">Log sales now</a>.</td>
+        <td colspan="7" class="text-center td2">No sales logged yet. <a href="{{ route('portal.login') }}">Log sales via Outlet Portal</a>.</td>
       </tr>
       @endforelse
     </tbody>

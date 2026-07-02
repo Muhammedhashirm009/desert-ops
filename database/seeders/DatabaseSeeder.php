@@ -2,26 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Supplier;
-use App\Models\Material;
-use App\Models\PurchaseOrder;
-use App\Models\PurchaseOrderItem;
-use App\Models\GoodsReceivedNote;
-use App\Models\GoodsReceivedNoteItem;
 use App\Models\User;
-use App\Models\Product;
-use App\Models\MaterialRequest;
-use App\Models\MaterialRequestItem;
-use App\Models\ProductionRun;
-use App\Models\ProductionRunMaterial;
-use App\Models\Outlet;
-use App\Models\OutletStock;
-use App\Models\Dispatch;
-use App\Models\DispatchItem;
-use App\Models\SalesLog;
-use App\Models\SalesLogItem;
+use App\Models\Account;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Carbon;
 
 class DatabaseSeeder extends Seeder
 {
@@ -30,625 +13,60 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Create Default Admin User
+        // 1. Create the 5 requested users
         User::factory()->create([
-            'name' => 'Hashir',
+            'name' => 'Hashir Admin',
             'email' => 'admin@dessertops.com',
             'password' => bcrypt('password'),
+            'role' => 'admin',
         ]);
 
-        // 2. Create Suppliers
-        $keralaDairy = Supplier::create([
-            'name' => 'Kerala Dairy Co.',
-            'contact_person' => 'Rajesh Kumar',
-            'email' => 'sales@keraladairy.com',
-            'phone' => '+91 9876543210',
-            'address' => "Milk Colony Road, Calicut, Kerala\nPIN: 673001",
+        User::factory()->create([
+            'name' => 'Accountant User',
+            'email' => 'accountant_user@dessertops.com',
+            'password' => bcrypt('password'),
+            'role' => 'accountant',
         ]);
 
-        $malabarSugar = Supplier::create([
-            'name' => 'Malabar Sugar Ltd.',
-            'contact_person' => 'Abdul Hameed',
-            'email' => 'info@malabarsugar.in',
-            'phone' => '+91 9847012345',
-            'address' => "Sugar Mill Compound, Palakkad, Kerala\nPIN: 678002",
+        User::factory()->create([
+            'name' => 'General Manager',
+            'email' => 'gm@dessertops.com',
+            'password' => bcrypt('password'),
+            'role' => 'gm',
         ]);
 
-        $fruitHub = Supplier::create([
-            'name' => 'Fresh Fruits Hub',
-            'contact_person' => 'Anil Kumar',
-            'email' => 'orders@freshfruithub.com',
-            'phone' => '+91 9446055555',
-            'address' => "Market Junction, Kochi, Kerala\nPIN: 682011",
+        User::factory()->create([
+            'name' => 'Kitchen Chef',
+            'email' => 'chef@dessertops.com',
+            'password' => bcrypt('password'),
+            'role' => 'kitchen_chef',
         ]);
 
-        $packingWorld = Supplier::create([
-            'name' => 'Packing World',
-            'contact_person' => 'Shaji V.G.',
-            'email' => 'support@packingworld.co.in',
-            'phone' => '+91 9562098765',
-            'address' => "Industrial Estate, Ollur, Thrissur, Kerala\nPIN: 680306",
+        User::factory()->create([
+            'name' => 'Store Manager',
+            'email' => 'manager@dessertops.com',
+            'password' => bcrypt('password'),
+            'role' => 'store_manager',
         ]);
 
-        $cocoaImports = Supplier::create([
-            'name' => 'Cocoa Imports Pvt.',
-            'contact_person' => 'Maria Jones',
-            'email' => 'maria@cocoaimports.in',
-            'phone' => '+91 8023456789',
-            'address' => "Port Trust Area, Wellington Island, Kochi, Kerala\nPIN: 682003",
-        ]);
-
-        // 3. Create Materials (Ingredients & Packaging)
-        $milk = Material::create([
-            'name' => 'Milk',
-            'sku' => 'RAW-MLK-001',
-            'category' => 'ingredient',
-            'unit' => 'L',
-            'current_stock' => 350.00,
-            'kitchen_stock' => 80.00,
-            'min_stock_alert' => 100.00,
-        ]);
-
-        $cream = Material::create([
-            'name' => 'Fresh Cream',
-            'sku' => 'RAW-CRM-002',
-            'category' => 'ingredient',
-            'unit' => 'L',
-            'current_stock' => 80.00,
-            'kitchen_stock' => 30.00,
-            'min_stock_alert' => 20.00,
-        ]);
-
-        $sugar = Material::create([
-            'name' => 'White Sugar',
-            'sku' => 'RAW-SUG-001',
-            'category' => 'ingredient',
-            'unit' => 'kg',
-            'current_stock' => 450.00,
-            'kitchen_stock' => 100.00,
-            'min_stock_alert' => 150.00,
-        ]);
-
-        $cocoa = Material::create([
-            'name' => 'Dark Cocoa Powder',
-            'sku' => 'RAW-CCA-001',
-            'category' => 'ingredient',
-            'unit' => 'kg',
-            'current_stock' => 25.00,
-            'kitchen_stock' => 15.00,
-            'min_stock_alert' => 10.00,
-        ]);
-
-        $butter = Material::create([
-            'name' => 'Butter',
-            'sku' => 'RAW-BTR-001',
-            'category' => 'ingredient',
-            'unit' => 'kg',
-            'current_stock' => 75.00,
-            'kitchen_stock' => 20.00,
-            'min_stock_alert' => 25.00,
-        ]);
-
-        $strawberries = Material::create([
-            'name' => 'Mango Pulp',
-            'sku' => 'RAW-FRT-MNG',
-            'category' => 'ingredient',
-            'unit' => 'kg',
-            'current_stock' => 65.00,
-            'kitchen_stock' => 25.00,
-            'min_stock_alert' => 20.00,
-        ]);
-
-        $strawberryFresh = Material::create([
-            'name' => 'Strawberry',
-            'sku' => 'RAW-FRT-STR',
-            'category' => 'ingredient',
-            'unit' => 'kg',
-            'current_stock' => 15.00,
-            'kitchen_stock' => 10.00,
-            'min_stock_alert' => 5.00,
-        ]);
-
-        $jamunBase = Material::create([
-            'name' => 'Gulab Jamun Base',
-            'sku' => 'RAW-BASE-GJ',
-            'category' => 'ingredient',
-            'unit' => 'kg',
-            'current_stock' => 3.50, // Critical stock!
-            'kitchen_stock' => 15.00,
-            'min_stock_alert' => 10.00,
-        ]);
-
-        $boxes = Material::create([
-            'name' => 'Dessert Boxes',
-            'sku' => 'PKG-BOX-MED',
-            'category' => 'packaging',
-            'unit' => 'pcs',
-            'current_stock' => 1200.00,
-            'kitchen_stock' => 150.00,
-            'min_stock_alert' => 300.00,
-        ]);
-
-        $wrappers = Material::create([
-            'name' => 'Wrappers',
-            'sku' => 'PKG-WRP-001',
-            'category' => 'packaging',
-            'unit' => 'pcs',
-            'current_stock' => 5000.00,
-            'kitchen_stock' => 500.00,
-            'min_stock_alert' => 1000.00,
-        ]);
-
-        $labels = Material::create([
-            'name' => 'Sticky Labels',
-            'sku' => 'PKG-LBL-001',
-            'category' => 'packaging',
-            'unit' => 'pcs',
-            'current_stock' => 120.00, // Critical stock!
-            'kitchen_stock' => 50.00,
-            'min_stock_alert' => 500.00,
-        ]);
-
-        // 4. Create Purchase Orders (POs)
-        // PO #1 (Received)
-        $po1 = PurchaseOrder::create([
-            'po_number' => 'PO-2026-0001',
-            'supplier_id' => $keralaDairy->id,
-            'status' => 'received',
-            'total_amount' => 18400.00,
-            'notes' => 'Urgent replenishment of dairy stocks.',
-            'eta' => Carbon::now()->subDays(2),
-            'created_at' => Carbon::now()->subDays(3),
-        ]);
-        PurchaseOrderItem::create([
-            'purchase_order_id' => $po1->id,
-            'material_id' => $milk->id,
-            'quantity' => 200,
-            'unit_price' => 60.00, // 12000
-        ]);
-        PurchaseOrderItem::create([
-            'purchase_order_id' => $po1->id,
-            'material_id' => $cream->id,
-            'quantity' => 80,
-            'unit_price' => 80.00, // 6400
-        ]);
-
-        // PO #2 (In Transit / Pending)
-        $po2 = PurchaseOrder::create([
-            'po_number' => 'PO-2026-0002',
-            'supplier_id' => $malabarSugar->id,
-            'status' => 'pending',
-            'total_amount' => 9200.00,
-            'notes' => 'Standard monthly sugar refill.',
-            'eta' => Carbon::now()->addDays(2),
-            'created_at' => Carbon::now()->subDays(1),
-        ]);
-        PurchaseOrderItem::create([
-            'purchase_order_id' => $po2->id,
-            'material_id' => $sugar->id,
-            'quantity' => 200,
-            'unit_price' => 46.00,
-        ]);
-
-        // PO #3 (Pending Approval)
-        $po3 = PurchaseOrder::create([
-            'po_number' => 'PO-2026-0003',
-            'supplier_id' => $fruitHub->id,
-            'status' => 'pending',
-            'total_amount' => 22750.00,
-            'notes' => 'For mango and strawberry dessert menu launch.',
-            'eta' => Carbon::now()->addDays(4),
-            'created_at' => Carbon::now()->subHours(5),
-        ]);
-        PurchaseOrderItem::create([
-            'purchase_order_id' => $po3->id,
-            'material_id' => $strawberryFresh->id,
-            'quantity' => 50,
-            'unit_price' => 250.00, // 12500
-        ]);
-        PurchaseOrderItem::create([
-            'purchase_order_id' => $po3->id,
-            'material_id' => $strawberries->id,
-            'quantity' => 150,
-            'unit_price' => 68.33, // 10250 (roughly matches 22750 total)
-        ]);
-
-        // PO #4 (Pending Approval)
-        $po4 = PurchaseOrder::create([
-            'po_number' => 'PO-2026-0004',
-            'supplier_id' => $packingWorld->id,
-            'status' => 'pending',
-            'total_amount' => 5600.00,
-            'notes' => 'Reordering labels to resolve low stock warning.',
-            'eta' => Carbon::now()->addDays(3),
-            'created_at' => Carbon::now()->subHours(2),
-        ]);
-        PurchaseOrderItem::create([
-            'purchase_order_id' => $po4->id,
-            'material_id' => $boxes->id,
-            'quantity' => 500,
-            'unit_price' => 8.00, // 4000
-        ]);
-        PurchaseOrderItem::create([
-            'purchase_order_id' => $po4->id,
-            'material_id' => $labels->id,
-            'quantity' => 800,
-            'unit_price' => 2.00, // 1600
-        ]);
-
-        // PO #5 (Received)
-        $po5 = PurchaseOrder::create([
-            'po_number' => 'PO-2026-0005',
-            'supplier_id' => $cocoaImports->id,
-            'status' => 'received',
-            'total_amount' => 31000.00,
-            'notes' => 'Premium dark cocoa and fat supplies.',
-            'eta' => Carbon::now()->subDays(1),
-            'created_at' => Carbon::now()->subDays(4),
-        ]);
-        PurchaseOrderItem::create([
-            'purchase_order_id' => $po5->id,
-            'material_id' => $cocoa->id,
-            'quantity' => 50,
-            'unit_price' => 400.00, // 20000
-        ]);
-        PurchaseOrderItem::create([
-            'purchase_order_id' => $po5->id,
-            'material_id' => $butter->id,
-            'quantity' => 55,
-            'unit_price' => 200.00, // 11000
-        ]);
-
-        // 5. Create Goods Received Notes (GRNs)
-        // GRN #1 (for PO #1)
-        $grn1 = GoodsReceivedNote::create([
-            'grn_number' => 'GRN-2026-0001',
-            'purchase_order_id' => $po1->id,
-            'received_date' => Carbon::now()->subDays(2)->setHour(8)->setMinute(45),
-            'received_by' => 'Hashir',
-            'notes' => 'All items received in good condition. Temperature logs checked.',
-            'created_at' => Carbon::now()->subDays(2)->setHour(8)->setMinute(45),
-        ]);
-        GoodsReceivedNoteItem::create([
-            'goods_received_note_id' => $grn1->id,
-            'material_id' => $milk->id,
-            'quantity_received' => 200.00,
-        ]);
-        GoodsReceivedNoteItem::create([
-            'goods_received_note_id' => $grn1->id,
-            'material_id' => $cream->id,
-            'quantity_received' => 80.00,
-        ]);
-
-        // GRN #2 (for PO #5)
-        $grn2 = GoodsReceivedNote::create([
-            'grn_number' => 'GRN-2026-0002',
-            'purchase_order_id' => $po5->id,
-            'received_date' => Carbon::now()->subDays(1)->setHour(10)->setMinute(15),
-            'received_by' => 'Hashir',
-            'notes' => 'Butter slightly soft but acceptable. Cocoa sealed.',
-            'created_at' => Carbon::now()->subDays(1)->setHour(10)->setMinute(15),
-        ]);
-        GoodsReceivedNoteItem::create([
-            'goods_received_note_id' => $grn2->id,
-            'material_id' => $cocoa->id,
-            'quantity_received' => 50.00,
-        ]);
-        GoodsReceivedNoteItem::create([
-            'goods_received_note_id' => $grn2->id,
-            'material_id' => $butter->id,
-            'quantity_received' => 55.00,
-        ]);
-        // 6. Create Dessert Products Catalog
-        $gjBox = Product::create([
-            'name' => 'Gulab Jamun Box',
-            'sku' => 'DSR-GJB-001',
-            'retail_price' => 250.00,
-            'current_kitchen_stock' => 120.00, // Stock will be updated by PR-0001
-        ]);
-
-        $mangoCustard = Product::create([
-            'name' => 'Mango Custard',
-            'sku' => 'DSR-MGC-002',
-            'retail_price' => 150.00,
-            'current_kitchen_stock' => 80.00, // Stock updated by PR-0002
-        ]);
-
-        $chocTruffle = Product::create([
-            'name' => 'Chocolate Truffle',
-            'sku' => 'DSR-CHT-003',
-            'retail_price' => 300.00,
-            'current_kitchen_stock' => 0.00,
-        ]);
-
-        // 7. Create Material Requests
-        // Request #1 (Released)
-        $mr1 = MaterialRequest::create([
-            'request_number' => 'MR-2026-0001',
-            'requested_by' => 'Chef Suresh',
-            'requested_date' => Carbon::now()->subDays(2),
-            'status' => 'released',
-            'notes' => 'For base preparation of Gulab Jamun batch.',
-            'created_at' => Carbon::now()->subDays(2),
-        ]);
-        MaterialRequestItem::create([
-            'material_request_id' => $mr1->id,
-            'material_id' => $milk->id,
-            'quantity_requested' => 50.00,
-            'quantity_released' => 50.00,
-        ]);
-        MaterialRequestItem::create([
-            'material_request_id' => $mr1->id,
-            'material_id' => $sugar->id,
-            'quantity_requested' => 20.00,
-            'quantity_released' => 20.00,
-        ]);
-
-        // Request #2 (Pending)
-        $mr2 = MaterialRequest::create([
-            'request_number' => 'MR-2026-0002',
-            'requested_by' => 'Head Baker Maria',
-            'requested_date' => Carbon::now(),
-            'status' => 'pending',
-            'notes' => 'Ingredients for Chocolate Truffle batch. Urgent release requested.',
-            'created_at' => Carbon::now(),
-        ]);
-        MaterialRequestItem::create([
-            'material_request_id' => $mr2->id,
-            'material_id' => $cocoa->id,
-            'quantity_requested' => 10.00,
-            'quantity_released' => 0.00,
-        ]);
-        MaterialRequestItem::create([
-            'material_request_id' => $mr2->id,
-            'material_id' => $butter->id,
-            'quantity_requested' => 15.00,
-            'quantity_released' => 0.00,
-        ]);
-
-        // 8. Create Production Runs
-        // Run #1 (Completed today)
-        $pr1 = ProductionRun::create([
-            'run_number' => 'PR-2026-0001',
-            'product_id' => $gjBox->id,
-            'quantity_produced' => 120.00,
-            'prepared_date' => Carbon::now(),
-            'status' => 'completed',
-            'notes' => 'Completed morning shift run. Packed and ready for distribution.',
-            'created_at' => Carbon::now(),
-        ]);
-        ProductionRunMaterial::create([
-            'production_run_id' => $pr1->id,
-            'material_id' => $milk->id,
-            'quantity_used' => 40.00,
-        ]);
-        ProductionRunMaterial::create([
-            'production_run_id' => $pr1->id,
-            'material_id' => $sugar->id,
-            'quantity_used' => 15.00,
-        ]);
-        ProductionRunMaterial::create([
-            'production_run_id' => $pr1->id,
-            'material_id' => $jamunBase->id,
-            'quantity_used' => 10.00,
-        ]);
-
-        // Run #2 (Completed yesterday)
-        $pr2 = ProductionRun::create([
-            'run_number' => 'PR-2026-0002',
-            'product_id' => $mangoCustard->id,
-            'quantity_produced' => 80.00,
-            'prepared_date' => Carbon::now()->subDay(),
-            'status' => 'completed',
-            'notes' => 'Batch #M04 tasted perfect. Cold storage stored.',
-            'created_at' => Carbon::now()->subDay(),
-        ]);
-        ProductionRunMaterial::create([
-            'production_run_id' => $pr2->id,
-            'material_id' => $milk->id,
-            'quantity_used' => 25.00,
-        ]);
-        ProductionRunMaterial::create([
-            'production_run_id' => $pr2->id,
-            'material_id' => $sugar->id,
-            'quantity_used' => 10.00,
-        ]);
-        ProductionRunMaterial::create([
-            'production_run_id' => $pr2->id,
-            'material_id' => $strawberries->id,
-            'quantity_used' => 12.00,
-        ]);
-
-        // 9. Create Outlets
-        $mgRoad = Outlet::create([
-            'name' => 'MG Road Outlet',
-            'type' => 'own',
-            'commission_rate' => 0.00,
-            'contact_person' => 'Sanjay Dutt',
-            'phone' => '+91 9988776655',
-            'address' => 'Shop G-12, City Centre Mall, MG Road, Calicut',
-        ]);
-
-        $beach = Outlet::create([
-            'name' => 'Calicut Beach Outlet',
-            'type' => 'own',
-            'commission_rate' => 0.00,
-            'contact_person' => 'Preethi Nair',
-            'phone' => '+91 9898989898',
-            'address' => 'Beach Road Container Yard, Calicut Beach',
-        ]);
-
-        $palayam = Outlet::create([
-            'name' => 'Palayam Junction Outlet',
-            'type' => 'own',
-            'commission_rate' => 0.00,
-            'contact_person' => 'Ramesh Kumar',
-            'phone' => '+91 8877665544',
-            'address' => 'Kozhikode Palayam Market Road, Calicut',
-        ]);
-
-        $thrissur = Outlet::create([
-            'name' => 'Thrissur Franchise',
-            'type' => 'franchise',
-            'commission_rate' => 15.00,
-            'contact_person' => 'Vipul Krishnan',
-            'phone' => '+91 7766554433',
-            'address' => 'Opposite Swaraj Round West, Thrissur',
-        ]);
-
-        $kochi = Outlet::create([
-            'name' => 'Kochi Lulu Mall Franchise',
-            'type' => 'franchise',
-            'commission_rate' => 12.00,
-            'contact_person' => 'Fahad Faasil',
-            'phone' => '+91 6655443322',
-            'address' => 'Food Court Level 3, Lulu Mall, Kochi',
-        ]);
-
-        // 10. Seed Outlet Stocks
-        OutletStock::create([
-            'outlet_id' => $mgRoad->id,
-            'product_id' => $gjBox->id,
-            'quantity' => 80.00,
-        ]);
-        OutletStock::create([
-            'outlet_id' => $mgRoad->id,
-            'product_id' => $mangoCustard->id,
-            'quantity' => 60.00,
-        ]);
-        OutletStock::create([
-            'outlet_id' => $beach->id,
-            'product_id' => $gjBox->id,
-            'quantity' => 40.00,
-        ]);
-        OutletStock::create([
-            'outlet_id' => $beach->id,
-            'product_id' => $chocTruffle->id,
-            'quantity' => 35.00,
-        ]);
-        OutletStock::create([
-            'outlet_id' => $thrissur->id,
-            'product_id' => $gjBox->id,
-            'quantity' => 15.00,
-        ]);
-        OutletStock::create([
-            'outlet_id' => $thrissur->id,
-            'product_id' => $mangoCustard->id,
-            'quantity' => 12.00,
-        ]);
-        OutletStock::create([
-            'outlet_id' => $kochi->id,
-            'product_id' => $chocTruffle->id,
-            'quantity' => 50.00,
-        ]);
-
-        // 11. Create Dispatch Shipment Records
-        // Dispatch #1: Delivered
-        $disp1 = Dispatch::create([
-            'dispatch_number' => 'DISP-2026-0001',
-            'outlet_id' => $mgRoad->id,
-            'dispatch_date' => Carbon::now()->subDays(3),
-            'status' => 'received',
-            'notes' => 'Bulk weekend shipment. Temperature controlled courier.',
-            'created_at' => Carbon::now()->subDays(3),
-        ]);
-        DispatchItem::create([
-            'dispatch_id' => $disp1->id,
-            'product_id' => $gjBox->id,
-            'quantity' => 50.00,
-        ]);
-        DispatchItem::create([
-            'dispatch_id' => $disp1->id,
-            'product_id' => $mangoCustard->id,
-            'quantity' => 30.00,
-        ]);
-
-        // Dispatch #2: Dispatched (In Transit)
-        $disp2 = Dispatch::create([
-            'dispatch_number' => 'DISP-2026-0002',
-            'outlet_id' => $thrissur->id,
-            'dispatch_date' => Carbon::now()->subDay(),
-            'status' => 'dispatched',
-            'notes' => 'Franchise restock. Dispatched via BlueDart.',
-            'created_at' => Carbon::now()->subDay(),
-        ]);
-        DispatchItem::create([
-            'dispatch_id' => $disp2->id,
-            'product_id' => $gjBox->id,
-            'quantity' => 20.00,
-        ]);
-
-        // Dispatch #3: Pending
-        $disp3 = Dispatch::create([
-            'dispatch_number' => 'DISP-2026-0003',
-            'outlet_id' => $beach->id,
-            'dispatch_date' => Carbon::now(),
-            'status' => 'pending',
-            'notes' => 'Awaiting chocolate truffle batch preparation.',
-            'created_at' => Carbon::now(),
-        ]);
-        DispatchItem::create([
-            'dispatch_id' => $disp3->id,
-            'product_id' => $chocTruffle->id,
-            'quantity' => 10.00,
-        ]);
-
-        // 12. Create Sales Logs
-        // Log #1: Own Outlet (100% earnings)
-        $sales1 = SalesLog::create([
-            'outlet_id' => $mgRoad->id,
-            'log_date' => Carbon::now()->subDays(2),
-            'created_at' => Carbon::now()->subDays(2),
-        ]);
-        SalesLogItem::create([
-            'sales_log_id' => $sales1->id,
-            'product_id' => $gjBox->id,
-            'quantity_sold' => 12.00,
-            'unit_price' => $gjBox->retail_price,
-            'total_revenue' => 12.00 * $gjBox->retail_price,
-            'commission_amount' => 0.00,
-            'net_revenue' => 12.00 * $gjBox->retail_price,
-        ]);
-        SalesLogItem::create([
-            'sales_log_id' => $sales1->id,
-            'product_id' => $mangoCustard->id,
-            'quantity_sold' => 8.00,
-            'unit_price' => $mangoCustard->retail_price,
-            'total_revenue' => 8.00 * $mangoCustard->retail_price,
-            'commission_amount' => 0.00,
-            'net_revenue' => 8.00 * $mangoCustard->retail_price,
-        ]);
-
-        // Log #2: Franchise Outlet (15% commission cut)
-        $sales2 = SalesLog::create([
-            'outlet_id' => $thrissur->id,
-            'log_date' => Carbon::now()->subDay(),
-            'created_at' => Carbon::now()->subDay(),
-        ]);
-        
-        $rev1 = 5.00 * $gjBox->retail_price;
-        $comm1 = $rev1 * 0.15;
-        SalesLogItem::create([
-            'sales_log_id' => $sales2->id,
-            'product_id' => $gjBox->id,
-            'quantity_sold' => 5.00,
-            'unit_price' => $gjBox->retail_price,
-            'total_revenue' => $rev1,
-            'commission_amount' => $comm1,
-            'net_revenue' => $rev1 - $comm1,
-        ]);
-        
-        $rev2 = 4.00 * $mangoCustard->retail_price;
-        $comm2 = $rev2 * 0.15;
-        SalesLogItem::create([
-            'sales_log_id' => $sales2->id,
-            'product_id' => $mangoCustard->id,
-            'quantity_sold' => 4.00,
-            'unit_price' => $mangoCustard->retail_price,
-            'total_revenue' => $rev2,
-            'commission_amount' => $comm2,
-            'net_revenue' => $rev2 - $comm2,
-        ]);
+        // 2. Seed essential Chart of Accounts (required for ledger metrics and financial balance views)
+        Account::create(['code' => '1010', 'name' => 'Cash in Hand', 'type' => 'asset']);
+        Account::create(['code' => '1020', 'name' => 'Bank Current Account', 'type' => 'asset']);
+        Account::create(['code' => '1200', 'name' => 'Accounts Receivable (Franchises)', 'type' => 'asset']);
+        Account::create(['code' => '1300', 'name' => 'Inventory - Raw Materials', 'type' => 'asset']);
+        Account::create(['code' => '2100', 'name' => 'Accounts Payable (Suppliers)', 'type' => 'liability']);
+        Account::create(['code' => '3000', 'name' => 'Capital Account', 'type' => 'equity']);
+        Account::create(['code' => '3900', 'name' => 'Retained Earnings', 'type' => 'equity']);
+        Account::create(['code' => '4010', 'name' => 'Direct Sales Revenue (Own Outlets)', 'type' => 'revenue']);
+        Account::create(['code' => '4020', 'name' => 'Franchise Sales Revenue', 'type' => 'revenue']);
+        Account::create(['code' => '5010', 'name' => 'Raw Material Purchases', 'type' => 'expense']);
+        Account::create(['code' => '5020', 'name' => 'Production Expenses', 'type' => 'expense']);
+        Account::create(['code' => '5100', 'name' => 'Rent Expense', 'type' => 'expense']);
+        Account::create(['code' => '5200', 'name' => 'Utilities Expense', 'type' => 'expense']);
+        Account::create(['code' => '5300', 'name' => 'Salaries & Wages', 'type' => 'expense']);
+        Account::create(['code' => '5400', 'name' => 'Transport & Delivery', 'type' => 'expense']);
+        Account::create(['code' => '5500', 'name' => 'Maintenance & Repairs', 'type' => 'expense']);
+        Account::create(['code' => '5600', 'name' => 'Office Supplies', 'type' => 'expense']);
+        Account::create(['code' => '5900', 'name' => 'General & Administrative Expenses', 'type' => 'expense']);
     }
 }
-

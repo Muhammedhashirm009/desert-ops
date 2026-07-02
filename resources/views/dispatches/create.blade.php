@@ -26,6 +26,10 @@
         <div class="ch-title">Shipment Items & Quantities</div>
       </div>
       <div class="cb" style="padding: 0;">
+        <div id="outlet-assignment-notice" style="display:none; padding: 12px 16px; background: var(--bg2); border-bottom: 1px solid var(--div); font-size: 12px; color: var(--txt2); display: none; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px; height:14px; flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span id="outlet-notice-text">Select a destination outlet to see assigned products.</span>
+        </div>
         <table class="po-table" id="items-table">
           <thead>
             <tr>
@@ -60,7 +64,7 @@
             <select name="outlet_id" id="outlet_id" class="form-input searchable-select" required style="height: 38px;">
               <option value="">-- Choose Destination --</option>
               @foreach($outlets as $outlet)
-                <option value="{{ $outlet->id }}" {{ old('outlet_id') == $outlet->id ? 'selected' : '' }}>
+                <option value="{{ $outlet->id }}" {{ old('outlet_id', request('outlet_id')) == $outlet->id ? 'selected' : '' }}>
                   {{ $outlet->name }} ({{ ucfirst($outlet->type) }})
                 </option>
               @endforeach
@@ -99,10 +103,16 @@
 document.addEventListener('DOMContentLoaded', function() {
     const container = document.getElementById('items-container');
     const addBtn = document.getElementById('add-row-btn');
+    const outletSelect = document.getElementById('outlet_id');
+    const notice = document.getElementById('outlet-assignment-notice');
+    const noticeText = document.getElementById('outlet-notice-text');
     
-    // Array of finished dessert products
-    const products = @json($products);
-    
+    // All products (fallback when no outlet selected)
+    const allProducts = @json($products);
+
+    // Currently filtered products for selected outlet
+    let filteredProducts = allProducts;
+    let filteredMaterials = [];
     let rowIndex = 0;
 
     function createRow() {
@@ -110,9 +120,23 @@ document.addEventListener('DOMContentLoaded', function() {
         row.id = `row-${rowIndex}`;
         
         let options = '<option value="">-- Choose Dessert --</option>';
-        products.forEach(p => {
-            options += `<option value="${p.id}">[${p.sku}] ${p.name} (Kitchen stock: ${parseInt(p.current_kitchen_stock)} units)</option>`;
-        });
+        
+        if (filteredProducts.length > 0) {
+            options += '<optgroup label="Dessert Products">';
+            filteredProducts.forEach(p => {
+                options += `<option value="${p.id}">[${p.sku}] ${p.name} (Kitchen stock: ${parseInt(p.current_kitchen_stock)} units)</option>`;
+            });
+            options += '</optgroup>';
+        }
+        
+        if (filteredMaterials.length > 0) {
+            options += '<optgroup label="Packaging Materials">';
+            filteredMaterials.forEach(m => {
+                const totalPieces = parseInt(m.kitchen_stock) * (parseInt(m.per_box_qty) || 1);
+                options += `<option value="mat:${m.id}">[${m.sku}] ${m.name} (Kitchen: ${totalPieces} pcs)</option>`;
+            });
+            options += '</optgroup>';
+        }
 
         row.innerHTML = `
             <td>
@@ -144,8 +168,63 @@ document.addEventListener('DOMContentLoaded', function() {
         rowIndex++;
     }
 
-    // Add initial row
-    createRow();
+    function clearRows() {
+        container.innerHTML = '';
+        rowIndex = 0;
+    }
+
+    function loadAssignedProducts(outletId) {
+        if (!outletId) {
+            filteredProducts = allProducts;
+            filteredMaterials = [];
+            notice.style.display = 'none';
+            clearRows();
+            createRow();
+            return;
+        }
+
+        notice.style.display = 'flex';
+        noticeText.textContent = 'Loading assigned products...';
+
+        fetch(`/api/outlets/${outletId}/assigned-products`)
+            .then(r => r.json())
+            .then(data => {
+                filteredProducts = data.products || [];
+                filteredMaterials = data.materials || [];
+                
+                const totalAssigned = filteredProducts.length + filteredMaterials.length;
+                if (totalAssigned > 0) {
+                    noticeText.textContent = `Showing ${totalAssigned} assigned item(s) for this outlet.`;
+                    notice.style.display = 'flex';
+                } else {
+                    noticeText.textContent = 'No products assigned to this outlet. Please assign products first from the outlet management page.';
+                    notice.style.display = 'flex';
+                }
+
+                clearRows();
+                createRow();
+            })
+            .catch(() => {
+                filteredProducts = allProducts;
+                filteredMaterials = [];
+                noticeText.textContent = 'Could not load assignments. Showing all products.';
+                clearRows();
+                createRow();
+            });
+    }
+
+    // Watch outlet selection changes
+    outletSelect.addEventListener('change', function() {
+        loadAssignedProducts(this.value);
+    });
+
+    // Initial load
+    const initialOutlet = outletSelect.value;
+    if (initialOutlet) {
+        loadAssignedProducts(initialOutlet);
+    } else {
+        createRow();
+    }
     
     addBtn.addEventListener('click', createRow);
 

@@ -68,6 +68,12 @@
   font-weight: 600;
   color: var(--txt);
 }
+@media (max-width: 768px) {
+  .grn-details-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
 </style>
 @endsection
 

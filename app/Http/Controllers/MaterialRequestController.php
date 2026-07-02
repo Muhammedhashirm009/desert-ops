@@ -69,6 +69,12 @@ class MaterialRequestController extends Controller
 
             DB::commit();
 
+            // Notify Store Managers, GMs, and Admins
+            $recipients = \App\Models\User::whereIn('role', ['admin', 'gm', 'store_manager'])->get();
+            if ($recipients->isNotEmpty()) {
+                \Illuminate\Support\Facades\Notification::send($recipients, new \App\Notifications\MaterialRequestCreated($materialRequest));
+            }
+
             return redirect()->route('material-requests.show', $materialRequest->id)
                 ->with('success', "Material Request {$requestNumber} submitted to Store Manager.");
 
@@ -164,6 +170,12 @@ class MaterialRequestController extends Controller
             $materialRequest->update(['status' => 'released']);
 
             DB::commit();
+
+            // Notify Kitchen Chefs, GMs, and Admins
+            $recipients = \App\Models\User::whereIn('role', ['admin', 'gm', 'kitchen_chef'])->get();
+            if ($recipients->isNotEmpty()) {
+                \Illuminate\Support\Facades\Notification::send($recipients, new \App\Notifications\MaterialRequestReleased($materialRequest));
+            }
 
             return redirect()->route('material-requests.show', $materialRequest->id)
                 ->with('success', "Materials released successfully. Inventory stocks updated.");

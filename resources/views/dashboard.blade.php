@@ -16,16 +16,20 @@
       Last updated just now
     </div>
   </div>
+  @if(in_array(auth()->user()->role, ['admin', 'gm', 'store_manager']))
   <div class="ph-acts">
     <a href="{{ route('purchase-orders.create') }}" class="btn-pri">
       <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       New Purchase Order
     </a>
   </div>
+  @endif
 </div>
 
+@if(in_array(auth()->user()->role, ['admin', 'gm', 'kitchen_chef']))
 <!-- Summary Strip -->
 <div class="sum-strip">
+  @if(in_array(auth()->user()->role, ['admin', 'gm']))
   <div class="sum-item">
     <div class="sum-val"><sup>₹</sup>{{ number_format($mtdRevenue) }}</div>
     <div class="sum-lbl">Month-to-Date Revenue</div>
@@ -33,46 +37,66 @@
       <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>Live Sales Logs
     </div>
   </div>
+  @endif
+  
   <div class="sum-item">
-    <div class="sum-val">87.9%</div>
+    <div class="sum-val">{{ number_format($fulfillmentRate, 1) }}%</div>
     <div class="sum-lbl">Fulfillment Rate</div>
     <div class="sum-delta">
-      <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>+3.2% this week
+      <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>{{ $fulfillmentTrend }}
     </div>
   </div>
+  
+  @if(in_array(auth()->user()->role, ['admin', 'gm']))
   <div class="sum-item">
     <div class="sum-val">{{ $activeOutletsCount }}</div>
     <div class="sum-lbl">Active Outlets</div>
     <div class="sum-delta">{{ $outletsBreakdown }}</div>
   </div>
-  <div class="sum-item">
-    <div class="sum-val">94.2%</div>
+  @endif
+  
+  <div class="sum-item" style="{{ in_array(auth()->user()->role, ['admin', 'gm']) ? '' : 'border-right: none;' }}">
+    <div class="sum-val">{{ number_format($onTimeRate, 1) }}%</div>
     <div class="sum-lbl">On-Time Dispatch</div>
     <div class="sum-delta">
-      <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>+1.8% vs target
+      <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>{{ $onTimeTrend }}
     </div>
   </div>
 </div>
+@endif
 
+@php
+  $kpiCols = 4;
+  if (auth()->user()->role === 'kitchen_chef') $kpiCols = 3;
+  if (auth()->user()->role === 'store_manager') $kpiCols = 2;
+@endphp
 <!-- KPI Grid -->
-<div class="kpi-grid">
+<div class="kpi-grid" style="grid-template-columns: repeat({{ $kpiCols }}, 1fr);">
+  @if(in_array(auth()->user()->role, ['admin', 'gm', 'kitchen_chef']))
   <div class="kpi">
     <div class="kpi-row1">
       <div class="kpi-icon" style="background:var(--purple-lt);">
         <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--purple-tx)"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       </div>
-      <div class="kpi-trend t-up">
-        <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>12.4%
+      <div class="kpi-trend {{ $productionTrend >= 0 ? 't-up' : 't-dn' }}">
+        @if($productionTrend >= 0)
+          <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+        @else
+          <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        @endif
+        {{ abs($productionTrend) }}%
       </div>
     </div>
     <div class="kpi-val"><sup>₹</sup>{{ number_format($todaysProductionValue) }}</div>
     <div class="kpi-lbl">Today's Production Value</div>
     <div class="kpi-foot">
       <span class="kpi-foot-lbl">Yesterday</span>
-      <span class="kpi-foot-val">₹74,920</span>
+      <span class="kpi-foot-val">₹{{ number_format($yesterdaysProductionValue) }}</span>
     </div>
   </div>
+  @endif
 
+  @if(in_array(auth()->user()->role, ['admin', 'gm', 'store_manager']))
   <div class="kpi">
     <div class="kpi-row1">
       <div class="kpi-icon" style="background:var(--amber-lt);">
@@ -87,14 +111,16 @@
       <span class="kpi-foot-val">{{ $openPoCount }} POs</span>
     </div>
   </div>
+  @endif
 
+  @if(in_array(auth()->user()->role, ['admin', 'gm', 'kitchen_chef']))
   <div class="kpi">
     <div class="kpi-row1">
       <div class="kpi-icon" style="background:var(--green-lt);">
         <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--green-tx)"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
       </div>
-      <div class="kpi-trend t-up">
-        <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>4 done
+      <div class="kpi-trend t-neu">
+        {{ $dispatchesTodayCount }} total
       </div>
     </div>
     <div class="kpi-val">{{ $dispatchesTodayCount }}</div>
@@ -104,6 +130,7 @@
       <span class="kpi-foot-val">Live dispatch logs</span>
     </div>
   </div>
+  @endif
 
   <div class="kpi">
     <div class="kpi-row1">
@@ -123,8 +150,9 @@
   </div>
 </div>
 
+@if(in_array(auth()->user()->role, ['admin', 'gm', 'kitchen_chef']))
 <!-- Chart + Stock -->
-<div class="row r-3-1">
+<div class="row {{ in_array(auth()->user()->role, ['admin', 'gm']) ? 'r-3-1' : '' }}" style="{{ in_array(auth()->user()->role, ['admin', 'gm']) ? '' : 'grid-template-columns: 1fr;' }}">
   <div class="card">
     <div class="ch">
       <div class="ch-ic" style="background:var(--div);">
@@ -146,20 +174,21 @@
     </div>
     <div class="chart-stats">
       <div class="cs-cell">
-        <div class="cs-val">₹5.8L</div>
+        <div class="cs-val">{{ $weekProductionFormatted }}</div>
         <div class="cs-lbl">Week Production</div>
       </div>
       <div class="cs-cell">
-        <div class="cs-val">₹5.1L</div>
+        <div class="cs-val">{{ $weekDispatchedFormatted }}</div>
         <div class="cs-lbl">Week Dispatched</div>
       </div>
       <div class="cs-cell">
-        <div class="cs-val">87.9%</div>
+        <div class="cs-val">{{ number_format($weekFulfillmentRate, 1) }}%</div>
         <div class="cs-lbl">Fulfillment Rate</div>
       </div>
     </div>
   </div>
 
+  @if(in_array(auth()->user()->role, ['admin', 'gm']))
   <div class="card">
     <div class="ch">
       <div class="ch-ic" style="background:var(--amber-lt);">
@@ -206,10 +235,20 @@
       </div>
     </div>
   </div>
+  @endif
 </div>
+@endif
 
+@php
+  $showPO = in_array(auth()->user()->role, ['admin', 'gm', 'store_manager']);
+  $showAlerts = true;
+  $showSKUs = in_array(auth()->user()->role, ['admin', 'gm']);
+  
+  $useGrid = ($showPO && ($showAlerts || $showSKUs));
+@endphp
 <!-- PO Table + Alerts Feed -->
-<div class="row r-2">
+<div class="row {{ $useGrid ? 'r-2' : '' }}" style="{{ $useGrid ? '' : 'grid-template-columns: 1fr;' }}">
+  @if($showPO)
   <!-- Purchase Orders -->
   <div class="card">
     <div class="ch">
@@ -222,7 +261,7 @@
       </div>
       <a href="{{ route('purchase-orders.index') }}" class="ch-link">All POs <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></a>
     </div>
-    <table>
+    <table class="tbl">
       <thead>
         <tr>
           <th>PO No.</th>
@@ -236,13 +275,13 @@
       <tbody>
         @forelse($recentPos as $po)
         <tr>
-          <td class="mono">{{ $po->po_number }}</td>
-          <td>
+          <td data-label="PO No." class="mono">{{ $po->po_number }}</td>
+          <td data-label="Supplier">
             <div class="td-name">{{ $po->supplier->name }}</div>
             <div class="td-meta">{{ $po->items->count() }} items</div>
           </td>
-          <td class="mono">₹{{ number_format($po->total_amount, 2) }}</td>
-          <td>
+          <td data-label="Amount" class="mono">₹{{ number_format($po->total_amount, 2) }}</td>
+          <td data-label="Status">
             @if($po->status === 'received')
               <span class="badge bg"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Received</span>
             @elseif($po->status === 'cancelled')
@@ -251,8 +290,8 @@
               <span class="badge ba"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Pending</span>
             @endif
           </td>
-          <td class="td3 mono">{{ $po->eta ? $po->eta->format('d M') : '—' }}</td>
-          <td>
+          <td data-label="ETA" class="td3 mono">{{ $po->eta ? $po->eta->format('d M') : '—' }}</td>
+          <td data-label="Action">
             <a href="{{ route('purchase-orders.show', $po->id) }}" class="td-act">
               <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               View
@@ -267,8 +306,11 @@
       </tbody>
     </table>
   </div>
+  @endif
 
+  @if($showAlerts || $showSKUs)
   <div style="display:flex;flex-direction:column;gap:14px;">
+    @if($showAlerts)
     <!-- Alerts Feed -->
     <div class="card">
       <div class="ch">
@@ -304,7 +346,9 @@
         @endforeach
       </div>
     </div>
+    @endif
 
+    @if($showSKUs)
     <!-- Top SKUs (Visual only) -->
     <div class="card">
       <div class="ch">
@@ -317,67 +361,54 @@
         </div>
       </div>
       <div>
-        <div class="sku-item">
-          <div class="sku-rank">01</div>
-          <div class="sku-name">
-            <div class="sku-n">Gulab Jamun Box</div>
-            <div class="sku-s">248 units · All outlets</div>
+        @forelse($topProducts as $index => $prod)
+          @php
+            $rankStr = str_pad($index + 1, 2, '0', STR_PAD_LEFT);
+            $pct = round(($prod->total_rev / $maxProductRev) * 100);
+          @endphp
+          <div class="sku-item">
+            <div class="sku-rank">{{ $rankStr }}</div>
+            <div class="sku-name">
+              <div class="sku-n">{{ $prod->name }}</div>
+              <div class="sku-s">{{ number_format($prod->total_units) }} units sold</div>
+            </div>
+            <div class="sku-r">
+              <div class="sku-val">₹{{ number_format($prod->total_rev) }}</div>
+              <div class="sku-bar"><div class="sku-fill" style="width:{{ $pct }}%;"></div></div>
+            </div>
           </div>
-          <div class="sku-r">
-            <div class="sku-val">₹62,000</div>
-            <div class="sku-bar"><div class="sku-fill" style="width:100%;"></div></div>
+        @empty
+          <div style="padding: 20px; text-align: center; color: var(--txt3);">
+            No sales recorded this month.
           </div>
-        </div>
-        <div class="sku-item">
-          <div class="sku-rank">02</div>
-          <div class="sku-name">
-            <div class="sku-n">Mango Custard</div>
-            <div class="sku-s">186 units · Franchise</div>
-          </div>
-          <div class="sku-r">
-            <div class="sku-val">₹46,500</div>
-            <div class="sku-bar"><div class="sku-fill" style="width:75%;"></div></div>
-          </div>
-        </div>
-        <div class="sku-item">
-          <div class="sku-rank">03</div>
-          <div class="sku-name">
-            <div class="sku-n">Chocolate Truffle</div>
-            <div class="sku-s">142 units · Own outlets</div>
-          </div>
-          <div class="sku-r">
-            <div class="sku-val">₹42,600</div>
-            <div class="sku-bar"><div class="sku-fill" style="width:68%;"></div></div>
-          </div>
-        </div>
+        @endforelse
       </div>
     </div>
+    @endif
   </div>
+  @endif
 </div>
 @endsection
 
 @section('scripts')
 <script>
 // Bar chart matching design
-const cdata = [
-  {d:'Mon',p:72,dp:60,f:20},{d:'Tue',p:88,dp:78,f:35},
-  {d:'Wed',p:65,dp:55,f:28},{d:'Thu',p:95,dp:85,f:40},
-  {d:'Fri',p:78,dp:70,f:30},{d:'Sat',p:100,dp:90,f:45},
-  {d:'Sun',p:84,dp:72,f:38}
-];
+const cdata = @json($chartData);
 const wrap = document.getElementById('chart');
-cdata.forEach(d => {
-  const col = document.createElement('div');
-  col.className = 'bc-col';
-  col.innerHTML = `
-    <div class="bc-bars">
-      <div class="bc-b" style="height:${d.p}%;background:#111827;opacity:.85;"></div>
-      <div class="bc-b" style="height:${d.dp}%;background:#16A34A;opacity:.8;"></div>
-      <div class="bc-b" style="height:${d.f}%;background:#2563EB;opacity:.6;"></div>
-    </div>
-    <div class="bc-lbl">${d.d}</div>
-  `;
-  wrap.appendChild(col);
-});
+if (wrap) {
+  cdata.forEach(d => {
+    const col = document.createElement('div');
+    col.className = 'bc-col';
+    col.innerHTML = `
+      <div class="bc-bars">
+        <div class="bc-b" style="height:${d.production_pct}%;background:#111827;opacity:.85;"></div>
+        <div class="bc-b" style="height:${d.dispatch_pct}%;background:#16A34A;opacity:.8;"></div>
+        <div class="bc-b" style="height:${d.sales_pct}%;background:#2563EB;opacity:.6;"></div>
+      </div>
+      <div class="bc-lbl">${d.day}</div>
+    `;
+    wrap.appendChild(col);
+  });
+}
 </script>
 @endsection

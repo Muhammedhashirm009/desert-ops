@@ -26,7 +26,7 @@ class PurchaseOrderController extends Controller
     public function create()
     {
         $suppliers = Supplier::orderBy('name', 'asc')->get();
-        $materials = Material::orderBy('name', 'asc')->get();
+        $materials = Material::with('suppliers')->orderBy('name', 'asc')->get();
 
         if ($suppliers->isEmpty() || $materials->isEmpty()) {
             return redirect()->route('purchase-orders.index')->with('error', 'Please ensure you have created at least one Supplier and one Material before creating a Purchase Order.');
@@ -38,11 +38,12 @@ class PurchaseOrderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'eta' => 'nullable|date|after_or_equal:today',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.material_id' => 'required|exists:materials,id',
+            'items.*.supplier_id' => 'nullable|exists:suppliers,id',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.unit_price' => 'required|numeric|min:0.00',
         ]);
@@ -50,46 +51,70 @@ class PurchaseOrderController extends Controller
         try {
             DB::beginTransaction();
 
-            // Generate unique PO Number (Format: PO-YYYY-XXXX)
-            $year = now()->year;
-            $latest = PurchaseOrder::where('po_number', 'like', "PO-{$year}-%")->orderBy('id', 'desc')->first();
-            $nextSerial = 1;
-            if ($latest) {
-                $parts = explode('-', $latest->po_number);
-                $nextSerial = (int)end($parts) + 1;
-            }
-            $poNumber = 'PO-' . $year . '-' . str_pad($nextSerial, 4, '0', STR_PAD_LEFT);
-
-            // Calculate total amount
-            $totalAmount = 0;
+            $items = [];
             foreach ($request->items as $item) {
-                $totalAmount += $item['quantity'] * $item['unit_price'];
+                $supplierId = $item['supplier_id'] ?? $request->supplier_id;
+                if (!$supplierId) {
+                    return back()->withInput()->with('error', 'Please select a supplier for each material item.');
+                }
+                $item['supplier_id'] = $supplierId;
+                $items[] = $item;
             }
 
-            // Create Purchase Order
-            $purchaseOrder = PurchaseOrder::create([
-                'po_number' => $poNumber,
-                'supplier_id' => $request->supplier_id,
-                'status' => 'pending',
-                'total_amount' => $totalAmount,
-                'notes' => $request->notes,
-                'eta' => $request->eta,
-            ]);
+            $itemsBySupplier = collect($items)->groupBy('supplier_id');
+            $createdPOIds = [];
+            $poNumbers = [];
 
-            // Create PO Items
-            foreach ($request->items as $item) {
-                PurchaseOrderItem::create([
-                    'purchase_order_id' => $purchaseOrder->id,
-                    'material_id' => $item['material_id'],
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
+            foreach ($itemsBySupplier as $supplierId => $supplierItems) {
+                // Generate unique PO Number (Format: PO-YYYY-XXXX)
+                $year = now()->year;
+                $latest = PurchaseOrder::where('po_number', 'like', "PO-{$year}-%")->orderBy('id', 'desc')->first();
+                $nextSerial = 1;
+                if ($latest) {
+                    $parts = explode('-', $latest->po_number);
+                    $nextSerial = (int)end($parts) + 1;
+                }
+                $poNumber = 'PO-' . $year . '-' . str_pad($nextSerial, 4, '0', STR_PAD_LEFT);
+
+                // Calculate total amount
+                $totalAmount = 0;
+                foreach ($supplierItems as $item) {
+                    $totalAmount += $item['quantity'] * $item['unit_price'];
+                }
+
+                // Create Purchase Order
+                $purchaseOrder = PurchaseOrder::create([
+                    'po_number' => $poNumber,
+                    'supplier_id' => $supplierId,
+                    'status' => 'pending',
+                    'total_amount' => $totalAmount,
+                    'notes' => $request->notes,
+                    'eta' => $request->eta,
                 ]);
+
+                // Create PO Items
+                foreach ($supplierItems as $item) {
+                    PurchaseOrderItem::create([
+                        'purchase_order_id' => $purchaseOrder->id,
+                        'material_id' => $item['material_id'],
+                        'quantity' => $item['quantity'],
+                        'unit_price' => $item['unit_price'],
+                    ]);
+                }
+
+                $createdPOIds[] = $purchaseOrder->id;
+                $poNumbers[] = $poNumber;
             }
 
             DB::commit();
 
-            return redirect()->route('purchase-orders.show', $purchaseOrder->id)
-                ->with('success', "Purchase Order {$poNumber} generated successfully.");
+            if (count($createdPOIds) === 1) {
+                return redirect()->route('purchase-orders.show', $createdPOIds[0])
+                    ->with('success', "Purchase Order {$poNumbers[0]} generated successfully.");
+            } else {
+                return redirect()->route('purchase-orders.index')
+                    ->with('success', "Multiple Purchase Orders created successfully: " . implode(', ', $poNumbers));
+            }
 
         } catch (\Exception $e) {
             DB::rollBack();

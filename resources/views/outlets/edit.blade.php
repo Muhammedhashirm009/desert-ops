@@ -72,6 +72,26 @@
         @error('address')<span style="color: var(--red-tx); font-size: 12px;">{{ $message }}</span>@enderror
       </div>
 
+      <div style="margin: 20px 0 10px; padding: 16px; background: var(--bg2); border-radius: 8px; border: 1px solid var(--border);">
+        <div style="font-weight: 600; font-size: 14px; color: var(--txt1); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Portal Authentication Credentials
+        </div>
+        <div class="grid-2">
+          <div class="form-grp" style="margin-bottom: 0;">
+            <label for="email">Portal Email *</label>
+            <input type="email" name="email" id="email" class="form-input" required value="{{ old('email', $outlet->email) }}" placeholder="e.g. store@dessertops.com">
+            @error('email')<span style="color: var(--red-tx); font-size: 12px;">{{ $message }}</span>@enderror
+          </div>
+
+          <div class="form-grp" style="margin-bottom: 0;">
+            <label for="password">Password (Optional)</label>
+            <input type="password" name="password" id="password" class="form-input" placeholder="Leave blank to keep current">
+            @error('password')<span style="color: var(--red-tx); font-size: 12px;">{{ $message }}</span>@enderror
+          </div>
+        </div>
+      </div>
+
       <div class="mt-4">
         <button type="submit" class="btn-pri" style="width: 100%; justify-content: center; padding: 10px;">
           Update Retail Outlet

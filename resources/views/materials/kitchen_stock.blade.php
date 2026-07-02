@@ -74,7 +74,7 @@
       </div>
     </div>
 
-    <table id="kitchenStockTable">
+    <table id="kitchenStockTable" class="tbl">
       <thead>
         <tr>
           <th>SKU</th>
@@ -89,25 +89,25 @@
       <tbody>
         @forelse($materials as $material)
         <tr>
-          <td class="mono">{{ $material->sku }}</td>
-          <td>
+          <td data-label="SKU" class="mono">{{ $material->sku }}</td>
+          <td data-label="Material Name">
             <div class="td-name">{{ $material->name }}</div>
             <div class="td-meta">Unit of Measure: {{ $material->unit }}</div>
           </td>
-          <td>
+          <td data-label="Category">
             @if($material->category === 'ingredient')
               <span class="badge bp">Ingredient</span>
             @else
               <span class="badge bb">Packaging</span>
             @endif
           </td>
-          <td class="mono" style="text-align: right; font-weight: 600; color: var(--blue-tx);">
+          <td data-label="Kitchen Stock" class="mono" style="text-align: right; font-weight: 600; color: var(--blue-tx);">
             {{ number_format($material->kitchen_stock, 2) }} {{ $material->unit }}
           </td>
-          <td class="mono td2" style="text-align: right;">
+          <td data-label="Store Stock (Ref)" class="mono td2" style="text-align: right;">
             {{ number_format($material->current_stock, 2) }} {{ $material->unit }}
           </td>
-          <td>
+          <td data-label="Status">
             @if($material->kitchen_stock > 5)
               <span class="badge bg"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>In Stock</span>
             @elseif($material->kitchen_stock > 0)
@@ -116,7 +116,7 @@
               <span class="badge br"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Out of Stock</span>
             @endif
           </td>
-          <td>
+          <td data-label="Actions">
             <a href="{{ route('material-requests.create', ['material_id' => $material->id]) }}" class="td-act">
               <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
               Request

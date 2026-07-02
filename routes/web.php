@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\MaterialController;
@@ -12,31 +13,218 @@ use App\Http\Controllers\ProductionRunController;
 use App\Http\Controllers\OutletController;
 use App\Http\Controllers\DispatchController;
 use App\Http\Controllers\SalesLogController;
+use App\Http\Controllers\OutletPortalController;
+use App\Http\Controllers\AccountingController;
 
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-Route::resource('suppliers', SupplierController::class);
-Route::resource('materials', MaterialController::class);
-Route::resource('purchase-orders', PurchaseOrderController::class);
+// ══ Unified Authentication Routes ══
+Route::get('login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('login', [AuthController::class, 'login'])->name('login.post');
+Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('purchase-orders/{purchase_order}/receive', [GrnController::class, 'create'])->name('purchase-orders.receive');
-Route::post('purchase-orders/{purchase_order}/receive', [GrnController::class, 'store'])->name('purchase-orders.receive.store');
-Route::resource('grns', GrnController::class)->only(['index', 'show']);
+// Override portal login view to use unified login page
+Route::get('portal', function () {
+    return redirect()->route('login');
+})->name('portal.login');
 
-// Module 2: Central Kitchen Routes
-Route::get('kitchen/stocks', [MaterialController::class, 'kitchenStock'])->name('kitchen.stocks');
-Route::resource('products', ProductController::class);
-Route::resource('material-requests', MaterialRequestController::class);
-Route::post('material-requests/{material_request}/approve', [MaterialRequestController::class, 'approve'])->name('material-requests.approve');
-Route::post('material-requests/{material_request}/release', [MaterialRequestController::class, 'release'])->name('material-requests.release');
-Route::post('material-requests/{material_request}/reject', [MaterialRequestController::class, 'reject'])->name('material-requests.reject');
-Route::resource('production-runs', ProductionRunController::class);
-Route::post('production-runs/{production_run}/complete', [ProductionRunController::class, 'complete'])->name('production-runs.complete');
+Route::post('portal/login', [OutletPortalController::class, 'login'])->name('portal.login.post');
+Route::post('portal/logout', [OutletPortalController::class, 'logout'])->name('portal.logout');
 
-// Module 3: Distribution & Outlets Routes
-Route::resource('outlets', OutletController::class);
-Route::resource('dispatches', DispatchController::class);
-Route::post('dispatches/{dispatch}/dispatch', [DispatchController::class, 'dispatch'])->name('dispatches.dispatch');
-Route::post('dispatches/{dispatch}/receive', [DispatchController::class, 'receive'])->name('dispatches.receive');
-Route::resource('sales-logs', SalesLogController::class);
 
+// ══ Protected Admin ERP Routes ══
+Route::middleware(['auth'])->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // API & Utility Routes
+    Route::get('api/search', [\App\Http\Controllers\UniversalSearchController::class, 'search'])->name('api.search');
+    Route::get('outlets/{outlet}/mini-dashboard', [\App\Http\Controllers\OutletController::class, 'miniDashboard'])->name('outlets.mini-dashboard');
+    Route::get('api/outlets', function() {
+        return response()->json(\App\Models\Outlet::orderBy('name')->get(['id', 'name', 'type']));
+    })->name('api.outlets');
+
+    // 1. Administration (User Management)
+    Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+        Route::resource('users', \App\Http\Controllers\AdminUserController::class);
+    });
+
+    // 2. Procurement (Suppliers, POs, GRNs)
+    Route::middleware(['role:admin,gm,store_manager'])->group(function () {
+        Route::resource('suppliers', SupplierController::class);
+        Route::post('suppliers/{supplier}/materials', [SupplierController::class, 'linkMaterial'])->name('suppliers.link-material');
+        Route::delete('suppliers/{supplier}/materials/{material}', [SupplierController::class, 'unlinkMaterial'])->name('suppliers.unlink-material');
+        Route::resource('purchase-orders', PurchaseOrderController::class);
+        Route::get('purchase-orders/{purchase_order}/receive', [GrnController::class, 'create'])->name('purchase-orders.receive');
+        Route::post('purchase-orders/{purchase_order}/receive', [GrnController::class, 'store'])->name('purchase-orders.receive.store');
+        Route::resource('grns', GrnController::class)->only(['index', 'show']);
+    });
+
+    // 3. Materials Management
+    // Raw materials full access for store manager/admin/gm
+    Route::resource('materials', MaterialController::class)->except(['index', 'show'])->middleware('role:admin,gm,store_manager');
+    // Raw materials read-only for kitchen chef
+    Route::resource('materials', MaterialController::class)->only(['index', 'show'])->middleware('role:admin,gm,store_manager,kitchen_chef');
+
+
+    // 4. Material Requests
+    // Request creation and viewing for kitchen chef, store manager, GM, Admin
+    Route::middleware(['role:admin,gm,kitchen_chef,store_manager'])->group(function () {
+        Route::resource('material-requests', MaterialRequestController::class)->except(['destroy']);
+    });
+    // Request approvals/releases only for store manager, GM, Admin
+    Route::middleware(['role:admin,gm,store_manager'])->group(function () {
+        Route::post('material-requests/{material_request}/approve', [MaterialRequestController::class, 'approve'])->name('material-requests.approve');
+        Route::post('material-requests/{material_request}/release', [MaterialRequestController::class, 'release'])->name('material-requests.release');
+        Route::post('material-requests/{material_request}/reject', [MaterialRequestController::class, 'reject'])->name('material-requests.reject');
+    });
+
+    // 5. Central Kitchen (Production, Products, Dispatches)
+    Route::middleware(['role:admin,gm,kitchen_chef'])->group(function () {
+        Route::get('kitchen/stocks', [MaterialController::class, 'kitchenStock'])->name('kitchen.stocks');
+        Route::resource('products', ProductController::class);
+        Route::resource('production-runs', ProductionRunController::class);
+        Route::post('production-runs/{production_run}/complete', [ProductionRunController::class, 'complete'])->name('production-runs.complete');
+        Route::get('outlet-orders', [DispatchController::class, 'outletOrders'])->name('dispatches.orders');
+        Route::resource('dispatches', DispatchController::class)->except(['edit', 'update']);
+        Route::post('dispatches/{dispatch}/dispatch', [DispatchController::class, 'dispatch'])->name('dispatches.dispatch');
+    });
+
+    // 6. Distribution & Outlets (Outlets, Sales Logs)
+    Route::middleware(['role:admin,gm'])->group(function () {
+        Route::resource('outlets', OutletController::class);
+        Route::post('outlets/{outlet}/assignments', [OutletController::class, 'updateAssignments'])->name('outlets.update-assignments');
+        Route::get('api/outlets/{outlet}/assigned-products', [OutletController::class, 'assignedProducts'])->name('api.outlets.assigned-products');
+        Route::resource('sales-logs', SalesLogController::class)->only(['index', 'show', 'create', 'store', 'destroy']);
+    });
+
+
+
+    // Live Notification API routes
+    Route::get('api/notifications', function() {
+        return response()->json([
+            'count' => auth()->user()->unreadNotifications()->count(),
+            'notifications' => auth()->user()->unreadNotifications()->take(5)->get()->map(function($n) {
+                return [
+                    'id' => $n->id,
+                    'data' => $n->data,
+                    'created_at' => $n->created_at->diffForHumans(),
+                ];
+            })
+        ]);
+    })->name('api.notifications');
+
+    Route::post('api/notifications/{id}/read', function($id) {
+        auth()->user()->notifications()->findOrFail($id)->markAsRead();
+        return response()->json(['success' => true]);
+    })->name('api.notifications.read');
+
+    // Data Pulse API — returns a fingerprint of latest data for live page refresh
+    Route::get('api/data-pulse', function() {
+        $pulse = collect([
+            App\Models\Dispatch::max('updated_at'),
+            App\Models\Product::max('updated_at'),
+            App\Models\OutletStock::max('updated_at'),
+            App\Models\SalesLog::max('updated_at'),
+            App\Models\ProductionRun::max('updated_at'),
+            App\Models\Material::max('updated_at'),
+            App\Models\PurchaseOrder::max('updated_at'),
+            App\Models\MaterialRequest::max('updated_at'),
+        ])->filter()->max();
+        return response()->json([
+            'pulse' => $pulse ? $pulse->toIso8601String() : now()->toIso8601String(),
+        ]);
+    })->name('api.data-pulse');
+});
+
+
+// ══ Protected Outlet Portal Routes ══
+Route::middleware(['portal.outlet'])->group(function () {
+    Route::get('portal/dashboard', [OutletPortalController::class, 'dashboard'])->name('portal.dashboard');
+    Route::get('portal/dispatches', [OutletPortalController::class, 'dispatches'])->name('portal.dispatches');
+    Route::post('portal/dispatches/{dispatch}/receive', [OutletPortalController::class, 'receiveDispatch'])->name('portal.dispatches.receive');
+    Route::get('portal/api/dispatches/{dispatch}/status', function(App\Models\Dispatch $dispatch) {
+        return response()->json([
+            'status' => $dispatch->status,
+            'updated_at' => $dispatch->updated_at->toIso8601String(),
+        ]);
+    })->name('portal.api.dispatches.status');
+    Route::get('portal/sales', [OutletPortalController::class, 'salesIndex'])->name('portal.sales.index');
+    Route::get('portal/sales/create', [OutletPortalController::class, 'salesCreate'])->name('portal.sales.create');
+    Route::post('portal/sales', [OutletPortalController::class, 'salesStore'])->name('portal.sales.store');
+
+    // Product requests
+    Route::get('portal/requests/create', [OutletPortalController::class, 'requestsCreate'])->name('portal.requests.create');
+    Route::post('portal/requests', [OutletPortalController::class, 'requestsStore'])->name('portal.requests.store');
+
+    // Portal Live Notification API routes
+    Route::get('portal/api/notifications', function() {
+        $outlet = auth('outlet')->user();
+        if (!$outlet) {
+            return response()->json(['count' => 0, 'notifications' => []]);
+        }
+        return response()->json([
+            'count' => $outlet->unreadNotifications()->count(),
+            'notifications' => $outlet->unreadNotifications()->take(5)->get()->map(function($n) {
+                return [
+                    'id' => $n->id,
+                    'data' => $n->data,
+                    'created_at' => $n->created_at->diffForHumans(),
+                ];
+            })
+        ]);
+    })->name('portal.api.notifications');
+
+    Route::post('portal/api/notifications/{id}/read', function($id) {
+        $outlet = auth('outlet')->user();
+        if ($outlet) {
+            $outlet->notifications()->findOrFail($id)->markAsRead();
+        }
+        return response()->json(['success' => true]);
+    })->name('portal.api.notifications.read');
+
+    // Portal Data Pulse API — for live page refresh
+    Route::get('portal/api/data-pulse', function() {
+        $outlet = auth('outlet')->user();
+        $pulse = collect([
+            App\Models\Dispatch::where('outlet_id', $outlet ? $outlet->id : 0)->max('updated_at'),
+            App\Models\OutletStock::where('outlet_id', $outlet ? $outlet->id : 0)->max('updated_at'),
+            App\Models\SalesLog::where('outlet_id', $outlet ? $outlet->id : 0)->max('updated_at'),
+        ])->filter()->max();
+        return response()->json([
+            'pulse' => $pulse ? $pulse->toIso8601String() : now()->toIso8601String(),
+        ]);
+    })->name('portal.api.data-pulse');
+});
+
+// ══ Protected Accountant Portal Routes ══
+Route::middleware(['portal.accountant'])->prefix('accounting')->name('accounting.')->group(function () {
+    Route::get('/', [AccountingController::class, 'dashboard'])->name('dashboard');
+    Route::post('/logout', [AuthController::class, 'accountantLogout'])->name('logout');
+
+    // Payment Vouchers (Money Going Out)
+    Route::get('/payment-vouchers', [AccountingController::class, 'paymentVouchersIndex'])->name('payment-vouchers.index');
+    Route::get('/payment-vouchers/create', [AccountingController::class, 'paymentVoucherCreate'])->name('payment-vouchers.create');
+    Route::post('/payment-vouchers', [AccountingController::class, 'paymentVoucherStore'])->name('payment-vouchers.store');
+    Route::get('/payment-vouchers/show', [AccountingController::class, 'paymentVoucherShow'])->name('payment-vouchers.show');
+
+    // Receipt Vouchers (Money Coming In)
+    Route::get('/receipt-vouchers', [AccountingController::class, 'receiptVouchersIndex'])->name('receipt-vouchers.index');
+    Route::get('/receipt-vouchers/create', [AccountingController::class, 'receiptVoucherCreate'])->name('receipt-vouchers.create');
+    Route::post('/receipt-vouchers', [AccountingController::class, 'receiptVoucherStore'])->name('receipt-vouchers.store');
+    Route::get('/receipt-vouchers/show', [AccountingController::class, 'receiptVoucherShow'])->name('receipt-vouchers.show');
+
+    // Pending Dues
+    Route::get('/bills', [AccountingController::class, 'billsIndex'])->name('bills.index');
+    Route::get('/bills/{bill}', [AccountingController::class, 'billShow'])->name('bills.show');
+    Route::get('/franchise-invoices', [AccountingController::class, 'franchiseInvoicesIndex'])->name('franchise-invoices.index');
+    Route::get('/franchise-invoices/{invoice}', [AccountingController::class, 'franchiseInvoiceShow'])->name('franchise-invoices.show');
+
+    // Transaction History & Reports
+    Route::get('/transaction-history', [AccountingController::class, 'transactionHistory'])->name('transaction-history');
+    Route::get('/ledger', function() { return redirect()->route('accounting.transaction-history', request()->query()); }); // backward compat
+    Route::get('/reports', [AccountingController::class, 'reports'])->name('reports');
+
+    // Account Transfers
+    Route::get('/transfers', [AccountingController::class, 'transfersIndex'])->name('transfers.index');
+    Route::get('/transfers/create', [AccountingController::class, 'transferCreate'])->name('transfers.create');
+    Route::post('/transfers', [AccountingController::class, 'transferStore'])->name('transfers.store');
+});
 

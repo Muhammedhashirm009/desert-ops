@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Material extends Model
@@ -19,6 +20,12 @@ class Material extends Model
         'current_stock',
         'kitchen_stock',
         'min_stock_alert',
+        'per_box_qty',
+        'retail_price',
+    ];
+
+    protected $casts = [
+        'retail_price' => 'decimal:2',
     ];
 
     public function purchaseOrderItems(): HasMany
@@ -29,6 +36,13 @@ class Material extends Model
     public function grnItems(): HasMany
     {
         return $this->hasMany(GoodsReceivedNoteItem::class);
+    }
+
+    public function suppliers(): BelongsToMany
+    {
+        return $this->belongsToMany(Supplier::class, 'material_supplier')
+                    ->withPivot('unit_price', 'is_preferred', 'notes')
+                    ->withTimestamps();
     }
 
     public function scopeLowStock(Builder $query): Builder

@@ -52,7 +52,7 @@ class SupplierTest extends TestCase
             'contact_person' => 'Updated Contact',
         ]);
 
-        $response->assertRedirect(route('suppliers.index'));
+        $response->assertRedirect(route('suppliers.show', $supplier->id));
         $this->assertDatabaseHas('suppliers', [
             'id' => $supplier->id,
             'name' => 'Updated Supplier C',

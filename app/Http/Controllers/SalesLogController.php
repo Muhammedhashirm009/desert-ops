@@ -7,6 +7,10 @@ use App\Models\OutletStock;
 use App\Models\Product;
 use App\Models\SalesLog;
 use App\Models\SalesLogItem;
+use App\Models\Account;
+use App\Models\JournalTransaction;
+use App\Models\JournalEntry;
+use App\Models\FranchiseInvoice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -102,6 +106,70 @@ class SalesLogController extends Controller
                     'commission_amount' => $commissionAmount,
                     'net_revenue' => $netRevenue,
                 ]);
+            }
+
+            // Calculate aggregates
+            $totalRev = $salesLog->items()->sum('total_revenue');
+            $netRev = $salesLog->items()->sum('net_revenue');
+
+            if ($outlet->type === 'own') {
+                // Direct retail sales (Debit Cash/Bank 1020, Credit Direct Sales 4010)
+                $bankAccount = Account::where('code', '1020')->first();
+                $salesAccount = Account::where('code', '4010')->first();
+                if ($bankAccount && $salesAccount) {
+                    $tx = JournalTransaction::create([
+                        'reference' => "SL-{$salesLog->id}",
+                        'description' => "Direct retail sales from Own Outlet: {$outlet->name}",
+                        'date' => $salesLog->log_date,
+                    ]);
+                    JournalEntry::create([
+                        'journal_transaction_id' => $tx->id,
+                        'account_id' => $bankAccount->id,
+                        'debit' => $totalRev,
+                        'credit' => 0.00,
+                    ]);
+                    JournalEntry::create([
+                        'journal_transaction_id' => $tx->id,
+                        'account_id' => $salesAccount->id,
+                        'debit' => 0.00,
+                        'credit' => $totalRev,
+                    ]);
+                }
+            } else {
+                // Franchise sales: Generate Franchise Invoice (Receivable)
+                $invoiceNumber = 'INV-' . now()->year . '-' . str_pad($salesLog->id, 4, '0', STR_PAD_LEFT);
+                FranchiseInvoice::create([
+                    'invoice_number' => $invoiceNumber,
+                    'sales_log_id' => $salesLog->id,
+                    'outlet_id' => $outlet->id,
+                    'amount' => $netRev,
+                    'status' => 'unpaid',
+                    'due_date' => now()->addDays(7),
+                    'notes' => "Auto-generated franchise share invoice for Sales Log #{$salesLog->id}",
+                ]);
+
+                // Create Journal Entry (Debit AR 1200, Credit Franchise Sales 4020)
+                $arAccount = Account::where('code', '1200')->first();
+                $salesAccount = Account::where('code', '4020')->first();
+                if ($arAccount && $salesAccount) {
+                    $tx = JournalTransaction::create([
+                        'reference' => $invoiceNumber,
+                        'description' => "Franchise invoice for sales log #{$salesLog->id} ({$outlet->name})",
+                        'date' => $salesLog->log_date,
+                    ]);
+                    JournalEntry::create([
+                        'journal_transaction_id' => $tx->id,
+                        'account_id' => $arAccount->id,
+                        'debit' => $netRev,
+                        'credit' => 0.00,
+                    ]);
+                    JournalEntry::create([
+                        'journal_transaction_id' => $tx->id,
+                        'account_id' => $salesAccount->id,
+                        'debit' => 0.00,
+                        'credit' => $netRev,
+                    ]);
+                }
             }
 
             DB::commit();

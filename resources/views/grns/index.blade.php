@@ -18,7 +18,7 @@
     </div>
     <div class="ch-title">Goods Received Log</div>
   </div>
-  <table>
+  <table class="tbl">
     <thead>
       <tr>
         <th>GRN No.</th>
@@ -33,17 +33,17 @@
     <tbody>
       @forelse($grns as $grn)
       <tr>
-        <td class="mono font-semibold">{{ $grn->grn_number }}</td>
-        <td class="mono td2">
+        <td data-label="GRN No." class="mono font-semibold">{{ $grn->grn_number }}</td>
+        <td data-label="PO Ref" class="mono td2">
           <a href="{{ route('purchase-orders.show', $grn->purchase_order_id) }}" style="color: inherit; text-decoration: underline;">
             {{ $grn->purchaseOrder->po_number }}
           </a>
         </td>
-        <td class="td-name">{{ $grn->purchaseOrder->supplier->name }}</td>
-        <td>{{ $grn->received_by }}</td>
-        <td class="mono">{{ $grn->received_date->format('d M Y') }}</td>
-        <td class="td3 mono">{{ $grn->created_at->format('d M Y h:i A') }}</td>
-        <td>
+        <td data-label="Supplier" class="td-name">{{ $grn->purchaseOrder->supplier->name }}</td>
+        <td data-label="Received By">{{ $grn->received_by }}</td>
+        <td data-label="Received Date" class="mono">{{ $grn->received_date->format('d M Y') }}</td>
+        <td data-label="Created Date" class="td3 mono">{{ $grn->created_at->format('d M Y h:i A') }}</td>
+        <td data-label="Action">
           <a href="{{ route('grns.show', $grn->id) }}" class="td-act">
             <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             View GRN

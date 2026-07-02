@@ -24,7 +24,7 @@
     </div>
     <div class="ch-title">Outlets & Franchise Locations</div>
   </div>
-  <table>
+  <table class="tbl">
     <thead>
       <tr>
         <th>Outlet Name</th>
@@ -39,32 +39,32 @@
     <tbody>
       @forelse($outlets as $outlet)
       <tr>
-        <td>
+        <td data-label="Outlet Name">
           <a href="{{ route('outlets.show', $outlet->id) }}" class="td-name" style="color:var(--txt); text-decoration:none; font-weight:600;">
             {{ $outlet->name }}
           </a>
-          <div class="td-meta">{{ Str::limit($outlet->address, 40) }}</div>
+          <div class="td-meta">{{ $outlet->email }} &bull; {{ Str::limit($outlet->address, 40) }}</div>
         </td>
-        <td>
+        <td data-label="Type">
           @if($outlet->type === 'own')
             <span class="badge bg">Company Owned</span>
           @else
             <span class="badge bp">Franchise</span>
           @endif
         </td>
-        <td class="mono" style="text-align: right; font-weight: 600;">
+        <td data-label="Franchise Commission" class="mono" style="text-align: right; font-weight: 600;">
           @if($outlet->type === 'franchise')
             {{ number_format($outlet->commission_rate, 1) }}%
           @else
             <span class="td3">—</span>
           @endif
         </td>
-        <td>{{ $outlet->contact_person ?? 'N/A' }}</td>
-        <td class="mono">{{ $outlet->phone ?? 'N/A' }}</td>
-        <td class="mono" style="text-align: center; font-weight: 600;">
+        <td data-label="Contact Person">{{ $outlet->contact_person ?? 'N/A' }}</td>
+        <td data-label="Phone" class="mono">{{ $outlet->phone ?? 'N/A' }}</td>
+        <td data-label="Stocked Items" class="mono" style="text-align: center; font-weight: 600;">
           {{ $outlet->stocks_count }}
         </td>
-        <td>
+        <td data-label="Actions">
           <div style="display: flex; gap: 12px; justify-content: flex-end;">
             <a href="{{ route('outlets.show', $outlet->id) }}" class="td-act">
               <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>

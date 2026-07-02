@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Notifications\Notifiable;
 
-class Outlet extends Model
+class Outlet extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
@@ -17,10 +19,18 @@ class Outlet extends Model
         'contact_person',
         'phone',
         'address',
+        'email',
+        'password',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
     protected $casts = [
         'commission_rate' => 'decimal:2',
+        'password' => 'hashed',
     ];
 
     public function stocks(): HasMany
@@ -36,5 +46,15 @@ class Outlet extends Model
     public function salesLogs(): HasMany
     {
         return $this->hasMany(SalesLog::class);
+    }
+
+    public function assignedProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'outlet_product')->withTimestamps();
+    }
+
+    public function assignedMaterials(): BelongsToMany
+    {
+        return $this->belongsToMany(Material::class, 'outlet_product')->withTimestamps();
     }
 }

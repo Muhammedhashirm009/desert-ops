@@ -80,7 +80,7 @@ class DispatchController extends Controller
 
     public function show(Dispatch $dispatch)
     {
-        $dispatch->load(['outlet', 'items.product']);
+        $dispatch->load(['outlet', 'items.product', 'items.material']);
         return view('dispatches.show', compact('dispatch'));
     }
 
@@ -90,28 +90,48 @@ class DispatchController extends Controller
             return back()->with('error', 'Shipment is already dispatched or received.');
         }
 
-        $dispatch->load('items.product');
+        $dispatch->load(['items.product', 'items.material', 'outlet']);
 
         try {
             DB::beginTransaction();
 
-            // 1. Stock Check: Verify Central Kitchen finished stock is sufficient
+            // 1. Stock Check: Verify stock in Central Kitchen is sufficient
             foreach ($dispatch->items as $item) {
-                $product = $item->product;
-                if ($item->quantity > $product->current_kitchen_stock) {
-                    throw new \Exception("Insufficient stock in Central Kitchen for dessert '{$product->name}'. Available in kitchen: {$product->current_kitchen_stock} units, Required to ship: {$item->quantity} units.");
+                if ($item->product_id) {
+                    $product = $item->product;
+                    if ($item->quantity > $product->current_kitchen_stock) {
+                        throw new \Exception("Insufficient stock in Central Kitchen for dessert '{$product->name}'. Available in kitchen: {$product->current_kitchen_stock} units, Required to ship: {$item->quantity} units.");
+                    }
+                } else {
+                    $material = $item->material;
+                    $perBox = $material->per_box_qty ?: 1;
+                    $reqBoxes = $item->quantity / $perBox;
+                    if ($reqBoxes > $material->kitchen_stock) {
+                        $availablePieces = $material->kitchen_stock * $perBox;
+                        throw new \Exception("Insufficient stock in Central Kitchen for packaging '{$material->name}'. Available in kitchen: {$availablePieces} pieces ({$material->kitchen_stock} boxes), Required to ship: {$item->quantity} pieces.");
+                    }
                 }
             }
 
             // 2. Decrement Central Kitchen stock for each item
             foreach ($dispatch->items as $item) {
-                $item->product->decrement('current_kitchen_stock', $item->quantity);
+                if ($item->product_id) {
+                    $item->product->decrement('current_kitchen_stock', $item->quantity);
+                } else {
+                    $material = $item->material;
+                    $perBox = $material->per_box_qty ?: 1;
+                    $reqBoxes = $item->quantity / $perBox;
+                    $material->decrement('kitchen_stock', $reqBoxes);
+                }
             }
 
             // 3. Update status
             $dispatch->update(['status' => 'dispatched']);
 
             DB::commit();
+
+            // Send notification to outlet
+            $dispatch->outlet->notify(new \App\Notifications\ShipmentDispatched($dispatch));
 
             return redirect()->route('dispatches.show', $dispatch->id)
                 ->with('success', "Shipment {$dispatch->dispatch_number} marked as DISPATCHED. Stock decremented from Central Kitchen.");
@@ -135,11 +155,17 @@ class DispatchController extends Controller
 
             // 1. Increment target outlet stocks
             foreach ($dispatch->items as $item) {
+                $search = ['outlet_id' => $dispatch->outlet_id];
+                if ($item->product_id) {
+                    $search['product_id'] = $item->product_id;
+                    $search['material_id'] = null;
+                } else {
+                    $search['product_id'] = null;
+                    $search['material_id'] = $item->material_id;
+                }
+
                 $outletStock = OutletStock::firstOrCreate(
-                    [
-                        'outlet_id' => $dispatch->outlet_id,
-                        'product_id' => $item->product_id,
-                    ],
+                    $search,
                     [
                         'quantity' => 0.00,
                     ]
@@ -165,10 +191,63 @@ class DispatchController extends Controller
     public function destroy(Dispatch $dispatch)
     {
         if ($dispatch->status !== 'pending') {
-            return back()->with('error', 'Only pending shipments can be deleted.');
+            return back()->with('error', 'Only pending shipments can be cancelled.');
         }
 
-        $dispatch->delete();
-        return redirect()->route('dispatches.index')->with('success', 'Dispatch shipment deleted.');
+        $dispatch->update(['status' => 'cancelled']);
+        return redirect()->back()->with('success', 'Order cancelled successfully.');
     }
+
+    public function outletOrders()
+    {
+        $dispatches = Dispatch::with(['outlet', 'items.product', 'items.material'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $cancelledDispatches = Dispatch::with(['outlet', 'items.product', 'items.material'])
+            ->where('status', 'cancelled')
+            ->orderBy('updated_at', 'desc')
+            ->take(15)
+            ->get();
+
+        $requirements = [];
+        foreach ($dispatches as $disp) {
+            foreach ($disp->items as $item) {
+                if ($item->product_id) {
+                    $key = 'product:' . $item->product_id;
+                    if (!isset($requirements[$key])) {
+                        $requirements[$key] = [
+                            'is_product' => true,
+                            'name' => $item->product->name,
+                            'sku' => $item->product->sku,
+                            'requested_qty' => 0,
+                            'stock' => $item->product->current_kitchen_stock,
+                            'unit' => 'Units',
+                        ];
+                    }
+                    $requirements[$key]['requested_qty'] += $item->quantity;
+                } else {
+                    $key = 'material:' . $item->material_id;
+                    if (!isset($requirements[$key])) {
+                        $perBox = $item->material->per_box_qty ?: 1;
+                        $requirements[$key] = [
+                            'is_product' => false,
+                            'name' => $item->material->name,
+                            'sku' => $item->material->sku,
+                            'requested_qty' => 0,
+                            'stock' => $item->material->kitchen_stock * $perBox,
+                            'unit' => 'Pieces',
+                            'per_box' => $perBox,
+                        ];
+                    }
+                    $requirements[$key]['requested_qty'] += $item->quantity;
+                }
+            }
+        }
+        $requirements = collect($requirements)->sortBy('name');
+
+        return view('dispatches.orders', compact('dispatches', 'cancelledDispatches', 'requirements'));
+    }
+
 }

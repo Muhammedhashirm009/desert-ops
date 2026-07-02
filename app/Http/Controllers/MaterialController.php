@@ -10,7 +10,7 @@ class MaterialController extends Controller
 {
     public function index()
     {
-        $materials = Material::orderBy('name', 'asc')->get();
+        $materials = Material::withCount('suppliers')->orderBy('name', 'asc')->get();
         return view('materials.index', compact('materials'));
     }
 
@@ -28,6 +28,8 @@ class MaterialController extends Controller
             'unit' => 'required|string|max:50',
             'current_stock' => 'required|numeric|min:0',
             'min_stock_alert' => 'required|numeric|min:0',
+            'per_box_qty' => 'nullable|integer|min:1',
+            'retail_price' => 'nullable|numeric|min:0',
         ]);
 
         Material::create($validated);
@@ -54,6 +56,8 @@ class MaterialController extends Controller
             'unit' => 'required|string|max:50',
             'current_stock' => 'required|numeric|min:0',
             'min_stock_alert' => 'required|numeric|min:0',
+            'per_box_qty' => 'nullable|integer|min:1',
+            'retail_price' => 'nullable|numeric|min:0',
         ]);
 
         $material->update($validated);

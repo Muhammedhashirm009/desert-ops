@@ -24,7 +24,7 @@
     </div>
     <div class="ch-title">Dessert Products & Stock</div>
   </div>
-  <table>
+  <table class="tbl">
     <thead>
       <tr>
         <th>SKU</th>
@@ -37,18 +37,18 @@
     <tbody>
       @forelse($products as $product)
       <tr>
-        <td class="mono font-semibold">{{ $product->sku }}</td>
-        <td>
+        <td data-label="SKU" class="mono font-semibold">{{ $product->sku }}</td>
+        <td data-label="Product Name">
           <div class="td-name">{{ $product->name }}</div>
           <div class="td-meta">SKU Ref: {{ $product->sku }}</div>
         </td>
-        <td class="mono font-semibold" style="text-align: right;">
+        <td data-label="Retail Price" class="mono font-semibold" style="text-align: right;">
           ₹{{ number_format($product->retail_price, 2) }}
         </td>
-        <td class="mono font-semibold" style="text-align: right; padding-right: 20px; color: {{ $product->current_kitchen_stock > 0 ? 'var(--green-tx)' : 'var(--red-tx)' }};">
+        <td data-label="Kitchen Stock" class="mono font-semibold" style="text-align: right; padding-right: 20px; color: {{ $product->current_kitchen_stock > 0 ? 'var(--green-tx)' : 'var(--red-tx)' }};">
           {{ number_format($product->current_kitchen_stock, 0) }} units
         </td>
-        <td>
+        <td data-label="Actions">
           <div style="display: flex; gap: 10px;">
             <a href="{{ route('products.edit', $product->id) }}" class="td-act">
               <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>

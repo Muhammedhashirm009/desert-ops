@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Material;
 use App\Models\Outlet;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -30,6 +31,8 @@ class OutletController extends Controller
             'contact_person' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:100',
             'address' => 'nullable|string',
+            'email' => 'required|email|unique:outlets,email',
+            'password' => 'required|string|min:4',
         ]);
 
         // Force commission rate to 0 for own outlets
@@ -44,13 +47,73 @@ class OutletController extends Controller
 
     public function show(Outlet $outlet)
     {
-        $outlet->load(['stocks.product', 'dispatches' => function($q) {
+        $outlet->load(['stocks.product', 'stocks.material', 'dispatches' => function($q) {
             $q->orderBy('created_at', 'desc')->take(10);
         }, 'salesLogs' => function($q) {
             $q->orderBy('created_at', 'desc')->take(10);
-        }]);
+        }, 'assignedProducts', 'assignedMaterials']);
 
-        return view('outlets.show', compact('outlet'));
+        $allProducts = Product::orderBy('name', 'asc')->get();
+        $allPackagingMaterials = Material::where('category', 'packaging')->orderBy('name', 'asc')->get();
+
+        return view('outlets.show', compact('outlet', 'allProducts', 'allPackagingMaterials'));
+    }
+
+    public function miniDashboard(Outlet $outlet)
+    {
+        $mtdRevenue = \Illuminate\Support\Facades\DB::table('sales_log_items')
+            ->join('sales_logs', 'sales_log_items.sales_log_id', '=', 'sales_logs.id')
+            ->where('sales_logs.outlet_id', $outlet->id)
+            ->whereMonth('sales_logs.log_date', now()->month)
+            ->whereYear('sales_logs.log_date', now()->year)
+            ->sum('sales_log_items.total_revenue');
+
+        $incomingCount = $outlet->dispatches()
+            ->where('status', 'dispatched')
+            ->count();
+
+        $stocks = $outlet->stocks()
+            ->with(['product', 'material'])
+            ->get()
+            ->map(function ($stock) {
+                return [
+                    'name' => $stock->product ? $stock->product->name : ($stock->material ? $stock->material->name : 'Unknown Item'),
+                    'sku' => $stock->product ? $stock->product->sku : ($stock->material ? $stock->material->sku : 'N/A'),
+                    'quantity' => (float)$stock->quantity,
+                    'unit' => $stock->product ? 'pcs' : ($stock->material ? $stock->material->unit : 'pcs'),
+                ];
+            });
+
+        $recentSales = $outlet->salesLogs()
+            ->with('items.product')
+            ->orderBy('log_date', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function ($log) {
+                return [
+                    'date' => $log->log_date ? $log->log_date->format('d M Y') : 'N/A',
+                    'total' => (float)$log->items->sum('total_revenue'),
+                    'items_count' => $log->items->count(),
+                ];
+            });
+
+        return response()->json([
+            'outlet' => [
+                'id' => $outlet->id,
+                'name' => $outlet->name,
+                'type' => ucfirst($outlet->type),
+                'contact_person' => $outlet->contact_person ?? 'N/A',
+                'phone' => $outlet->phone ?? 'N/A',
+                'email' => $outlet->email ?? 'N/A',
+                'address' => $outlet->address ?? 'N/A',
+                'url' => route('outlets.show', $outlet->id),
+            ],
+            'mtd_revenue' => (float)$mtdRevenue,
+            'incoming_count' => $incomingCount,
+            'stocks_count' => $stocks->count(),
+            'stocks' => $stocks,
+            'recent_sales' => $recentSales,
+        ]);
     }
 
     public function edit(Outlet $outlet)
@@ -67,10 +130,16 @@ class OutletController extends Controller
             'contact_person' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:100',
             'address' => 'nullable|string',
+            'email' => 'required|email|unique:outlets,email,' . $outlet->id,
+            'password' => 'nullable|string|min:4',
         ]);
 
         if ($validated['type'] === 'own') {
             $validated['commission_rate'] = 0.00;
+        }
+
+        if (empty($validated['password'])) {
+            unset($validated['password']);
         }
 
         $outlet->update($validated);
@@ -82,5 +151,40 @@ class OutletController extends Controller
     {
         $outlet->delete();
         return redirect()->route('outlets.index')->with('success', 'Outlet deleted successfully.');
+    }
+
+    /**
+     * Update product and material assignments for an outlet.
+     */
+    public function updateAssignments(Request $request, Outlet $outlet)
+    {
+        $validated = $request->validate([
+            'product_ids' => 'nullable|array',
+            'product_ids.*' => 'exists:products,id',
+            'material_ids' => 'nullable|array',
+            'material_ids.*' => 'exists:materials,id',
+        ]);
+
+        $outlet->assignedProducts()->sync($validated['product_ids'] ?? []);
+        $outlet->assignedMaterials()->sync($validated['material_ids'] ?? []);
+
+        return redirect()->route('outlets.show', $outlet->id)->with('success', 'Product assignments updated successfully.');
+    }
+
+    /**
+     * API endpoint: returns assigned product and material IDs for an outlet.
+     */
+    public function assignedProducts(Outlet $outlet)
+    {
+        $productIds = $outlet->assignedProducts()->pluck('products.id');
+        $materialIds = $outlet->assignedMaterials()->pluck('materials.id');
+
+        $products = Product::whereIn('id', $productIds)->get(['id', 'name', 'sku', 'retail_price', 'current_kitchen_stock']);
+        $materials = Material::whereIn('id', $materialIds)->where('category', 'packaging')->get(['id', 'name', 'sku', 'retail_price', 'kitchen_stock', 'per_box_qty']);
+
+        return response()->json([
+            'products' => $products,
+            'materials' => $materials,
+        ]);
     }
 }

@@ -42,6 +42,14 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'outlet' => [
+            'driver' => 'session',
+            'provider' => 'outlets',
+        ],
+        'accountant' => [
+            'driver' => 'session',
+            'provider' => 'accountants',
+        ],
     ],
 
     /*
@@ -59,12 +67,21 @@ return [
     |
     | Supported: "database", "eloquent"
     |
+    |
     */
 
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+        'outlets' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Outlet::class,
+        ],
+        'accountants' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Accountant::class,
         ],
 
         // 'users' => [

@@ -32,6 +32,8 @@ class OutletTest extends TestCase
             'type' => 'own',
             'commission_rate' => 15.00, // should be forced to 0
             'contact_person' => 'Amal',
+            'email' => 'beachside@dessertops.com',
+            'password' => 'password123',
         ]);
 
         $response->assertRedirect(route('outlets.index'));
@@ -39,6 +41,7 @@ class OutletTest extends TestCase
             'name' => 'Beach Side Shop',
             'type' => 'own',
             'commission_rate' => 0.00,
+            'email' => 'beachside@dessertops.com',
         ]);
     }
 
@@ -49,6 +52,8 @@ class OutletTest extends TestCase
             'type' => 'franchise',
             'commission_rate' => 12.50,
             'contact_person' => 'Rahul',
+            'email' => 'thrissur@dessertops.com',
+            'password' => 'password123',
         ]);
 
         $response->assertRedirect(route('outlets.index'));
@@ -56,6 +61,7 @@ class OutletTest extends TestCase
             'name' => 'Thrissur Franchise',
             'type' => 'franchise',
             'commission_rate' => 12.50,
+            'email' => 'thrissur@dessertops.com',
         ]);
     }
 
@@ -65,12 +71,15 @@ class OutletTest extends TestCase
             'name' => 'Old Outlet',
             'type' => 'own',
             'commission_rate' => 0.00,
+            'email' => 'old@dessertops.com',
+            'password' => bcrypt('password'),
         ]);
 
         $response = $this->put(route('outlets.update', $outlet->id), [
             'name' => 'New Outlet Name',
             'type' => 'franchise',
             'commission_rate' => 10.00,
+            'email' => 'new@dessertops.com',
         ]);
 
         $response->assertRedirect(route('outlets.index'));
@@ -79,6 +88,7 @@ class OutletTest extends TestCase
             'name' => 'New Outlet Name',
             'type' => 'franchise',
             'commission_rate' => 10.00,
+            'email' => 'new@dessertops.com',
         ]);
     }
 

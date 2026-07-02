@@ -24,7 +24,7 @@
     </div>
     <div class="ch-title">Request Logs</div>
   </div>
-  <table>
+  <table class="tbl">
     <thead>
       <tr>
         <th>Request No.</th>
@@ -38,10 +38,10 @@
     <tbody>
       @forelse($materialRequests as $mr)
       <tr>
-        <td class="mono font-semibold">{{ $mr->request_number }}</td>
-        <td class="td-name">{{ $mr->requested_by }}</td>
-        <td>{{ $mr->items->count() }} items</td>
-        <td>
+        <td data-label="Request No." class="mono font-semibold">{{ $mr->request_number }}</td>
+        <td data-label="Requested By" class="td-name">{{ $mr->requested_by }}</td>
+        <td data-label="Items Count">{{ $mr->items->count() }} items</td>
+        <td data-label="Status">
           @if($mr->status === 'released')
             <span class="badge bg"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Released</span>
           @elseif($mr->status === 'approved')
@@ -52,8 +52,8 @@
             <span class="badge ba"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Pending</span>
           @endif
         </td>
-        <td class="mono td3">{{ $mr->requested_date->format('d M Y') }}</td>
-        <td>
+        <td data-label="Requested Date" class="mono td3">{{ $mr->requested_date->format('d M Y') }}</td>
+        <td data-label="Action">
           <a href="{{ route('material-requests.show', $mr->id) }}" class="td-act">
             <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             View Details
