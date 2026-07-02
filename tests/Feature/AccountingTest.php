@@ -235,7 +235,8 @@ class AccountingTest extends TestCase
         // Seed outlet stock first
         $this->franchise->stocks()->create([
             'product_id' => $this->product->id,
-            'quantity' => 10
+            'quantity' => 10,
+            'showcase_quantity' => 10,
         ]);
 
         $response = $this->actingAs($this->franchise, 'outlet')

@@ -41,7 +41,7 @@ class SalesLogController extends Controller
         $outletStocks = OutletStock::get()
             ->groupBy('outlet_id')
             ->map(function ($items) {
-                return $items->pluck('quantity', 'product_id');
+                return $items->pluck('showcase_quantity', 'product_id');
             });
 
         return view('sales_logs.create', compact('outlets', 'products', 'outletStocks'));
@@ -75,15 +75,27 @@ class SalesLogController extends Controller
                     ->where('product_id', $product->id)
                     ->first();
                 
-                $availableQty = $outletStock ? (float)$outletStock->quantity : 0.00;
+                $availableQty = $outletStock ? (float)$outletStock->showcase_quantity : 0.00;
                 $quantitySold = (float)$item['quantity_sold'];
 
                 if ($quantitySold > $availableQty) {
-                    throw new \Exception("Insufficient stock at outlet '{$outlet->name}' for product '{$product->name}'. Available at outlet: {$availableQty} units, Sold: {$quantitySold} units.");
+                    throw new \Exception("Insufficient stock at outlet '{$outlet->name}' for product '{$product->name}'. Available at showcase: {$availableQty} units, Sold: {$quantitySold} units.");
                 }
 
                 // 2. Decrement outlet stock
+                $outletStock->decrement('showcase_quantity', $quantitySold);
                 $outletStock->decrement('quantity', $quantitySold);
+
+                // Log movement
+                \App\Models\OutletStockMovement::create([
+                    'outlet_id' => $outlet->id,
+                    'product_id' => $product->id,
+                    'from_location' => 'showcase',
+                    'to_location' => 'consumed',
+                    'quantity' => $quantitySold,
+                    'logged_by' => 'Admin Logged Sale',
+                    'reference' => 'Sales Log #' . $salesLog->id,
+                ]);
 
                 // 3. Calculate financial metrics
                 $unitPrice = $product->retail_price;
@@ -199,21 +211,33 @@ class SalesLogController extends Controller
         try {
             DB::beginTransaction();
 
-            // Revert stocks back to the outlet upon deletion of sales log!
+            // Revert stocks back to the outlet showcase upon deletion of sales log
             $salesLog->load('items');
             foreach ($salesLog->items as $item) {
                 $outletStock = OutletStock::where('outlet_id', $salesLog->outlet_id)
                     ->where('product_id', $item->product_id)
                     ->first();
                 if ($outletStock) {
+                    $outletStock->increment('showcase_quantity', $item->quantity_sold);
                     $outletStock->increment('quantity', $item->quantity_sold);
+
+                    // Log reversion movement
+                    \App\Models\OutletStockMovement::create([
+                        'outlet_id' => $salesLog->outlet_id,
+                        'product_id' => $item->product_id,
+                        'from_location' => 'consumed',
+                        'to_location' => 'showcase',
+                        'quantity' => $item->quantity_sold,
+                        'logged_by' => 'Sales Log Deleted',
+                        'reference' => 'Sales Log Reversion #' . $salesLog->id,
+                    ]);
                 }
             }
 
             $salesLog->delete();
 
             DB::commit();
-            return redirect()->route('sales-logs.index')->with('success', 'Sales log deleted and stocks restored.');
+            return redirect()->route('sales-logs.index')->with('success', 'Sales log deleted and showcase stocks restored.');
 
         } catch (\Exception $e) {
             DB::rollBack();

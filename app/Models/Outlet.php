@@ -57,4 +57,14 @@ class Outlet extends Authenticatable
     {
         return $this->belongsToMany(Material::class, 'outlet_product')->withTimestamps();
     }
+
+    public function showcaseRequests(): HasMany
+    {
+        return $this->hasMany(ShowcaseRequest::class);
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(OutletStockMovement::class);
+    }
 }

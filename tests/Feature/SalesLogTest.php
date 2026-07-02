@@ -46,12 +46,14 @@ class SalesLogTest extends TestCase
             'outlet_id' => $this->ownOutlet->id,
             'product_id' => $this->product->id,
             'quantity' => 30.00,
+            'showcase_quantity' => 30.00,
         ]);
 
         OutletStock::create([
             'outlet_id' => $this->franchiseOutlet->id,
             'product_id' => $this->product->id,
             'quantity' => 20.00,
+            'showcase_quantity' => 20.00,
         ]);
     }
 
@@ -76,7 +78,10 @@ class SalesLogTest extends TestCase
         $stock = OutletStock::where('outlet_id', $this->ownOutlet->id)
             ->where('product_id', $this->product->id)
             ->first();
-        $stock->update(['quantity' => 20.00]);
+        $stock->update([
+            'quantity' => 20.00,
+            'showcase_quantity' => 20.00,
+        ]);
 
         // Delete the sales log
         $response = $this->delete(route('sales-logs.destroy', $log->id));

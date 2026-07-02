@@ -100,6 +100,7 @@ class OutletPortalController extends Controller
     public function receiveDispatch(Request $request, Dispatch $dispatch)
     {
         $outletId = session('portal_outlet_id');
+        $outlet = Outlet::findOrFail($outletId);
         
         if ($dispatch->outlet_id != $outletId) {
             return back()->with('error', 'Unauthorized action for this outlet.');
@@ -114,7 +115,7 @@ class OutletPortalController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Increment outlet stocks
+            // 1. Increment outlet stocks and log movements
             foreach ($dispatch->items as $item) {
                 $search = ['outlet_id' => $outletId];
                 if ($item->product_id) {
@@ -129,10 +130,26 @@ class OutletPortalController extends Controller
                     $search,
                     [
                         'quantity' => 0.00,
+                        'store_quantity' => 0.00,
+                        'kitchen_quantity' => 0.00,
+                        'showcase_quantity' => 0.00,
                     ]
                 );
 
+                $outletStock->increment('store_quantity', $item->quantity);
                 $outletStock->increment('quantity', $item->quantity);
+
+                // Log movement
+                \App\Models\OutletStockMovement::create([
+                    'outlet_id' => $outletId,
+                    'product_id' => $item->product_id,
+                    'material_id' => $item->material_id,
+                    'from_location' => 'external',
+                    'to_location' => 'store',
+                    'quantity' => $item->quantity,
+                    'logged_by' => $outlet->name . ' Staff',
+                    'reference' => $dispatch->dispatch_number,
+                ]);
             }
 
             // 2. Set status to received
@@ -183,9 +200,9 @@ class OutletPortalController extends Controller
             $products = Product::whereIn('id', $assignedProductIds)->orderBy('name', 'asc')->get();
         }
 
-        // Pass this outlet's current stocks
+        // Pass this outlet's current showcase stocks
         $stocks = OutletStock::where('outlet_id', $outletId)
-            ->pluck('quantity', 'product_id');
+            ->pluck('showcase_quantity', 'product_id');
 
         return view('portal.sales_create', compact('outlet', 'products', 'stocks'));
     }
@@ -218,15 +235,27 @@ class OutletPortalController extends Controller
                     ->where('product_id', $product->id)
                     ->first();
                 
-                $availableQty = $outletStock ? (float)$outletStock->quantity : 0.00;
+                $availableQty = $outletStock ? (float)$outletStock->showcase_quantity : 0.00;
                 $quantitySold = (float)$item['quantity_sold'];
 
                 if ($quantitySold > $availableQty) {
-                    throw new \Exception("Insufficient stock for product '{$product->name}'. Available at store: {$availableQty} units, Sold: {$quantitySold} units.");
+                    throw new \Exception("Insufficient stock for product '{$product->name}'. Available at showcase: {$availableQty} units, Sold: {$quantitySold} units.");
                 }
 
                 // 2. Decrement outlet stock
+                $outletStock->decrement('showcase_quantity', $quantitySold);
                 $outletStock->decrement('quantity', $quantitySold);
+
+                // Log movement
+                \App\Models\OutletStockMovement::create([
+                    'outlet_id' => $outletId,
+                    'product_id' => $product->id,
+                    'from_location' => 'showcase',
+                    'to_location' => 'consumed',
+                    'quantity' => $quantitySold,
+                    'logged_by' => 'Customer Sale',
+                    'reference' => 'Sales Log #' . $salesLog->id,
+                ]);
 
                 // 3. Financial calculations
                 $unitPrice = $product->retail_price;
@@ -419,6 +448,74 @@ class OutletPortalController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()->with('error', 'Error submitting product request: ' . $e->getMessage());
+        }
+    }
+
+    public function moveStock(Request $request)
+    {
+        $outletId = session('portal_outlet_id');
+        $outlet = Outlet::findOrFail($outletId);
+        
+        $request->validate([
+            'stock_id' => 'required|exists:outlet_stocks,id',
+            'from_location' => 'required|in:store,kitchen',
+            'to_location' => 'required|in:kitchen,showcase,consumed',
+            'quantity' => 'required|numeric|min:0.01',
+        ]);
+
+        $stock = OutletStock::where('outlet_id', $outletId)->findOrFail($request->stock_id);
+        $qtyToMove = (float)$request->quantity;
+
+        $sourceField = $request->from_location . '_quantity';
+        $currentSourceQty = (float)$stock->$sourceField;
+
+        if ($qtyToMove > $currentSourceQty) {
+            return back()->with('error', "Insufficient stock in {$request->from_location}. Available: {$currentSourceQty}, Requested: {$qtyToMove}");
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // 1. Decrement source location
+            $stock->decrement($sourceField, $qtyToMove);
+
+            // 2. Increment target location or handle consumption
+            if ($request->to_location === 'consumed') {
+                $stock->decrement('quantity', $qtyToMove);
+                $msg = "Recorded consumption of {$qtyToMove} units of " . ($stock->product_id ? $stock->product->name : $stock->material->name) . ".";
+            } else {
+                $targetField = $request->to_location . '_quantity';
+                
+                if ($request->to_location === 'showcase' && !$stock->product_id) {
+                    throw new \Exception("Only finished products can be moved to the showcase.");
+                }
+                
+                $stock->increment($targetField, $qtyToMove);
+                $msg = "Successfully transferred {$qtyToMove} units from " . ucfirst($request->from_location) . " to " . ucfirst($request->to_location) . ".";
+            }
+
+            // Create movement log
+            \App\Models\OutletStockMovement::create([
+                'outlet_id' => $outletId,
+                'product_id' => $stock->product_id,
+                'material_id' => $stock->material_id,
+                'from_location' => $request->from_location,
+                'to_location' => $request->to_location,
+                'quantity' => $qtyToMove,
+                'logged_by' => $outlet->name . ' Staff',
+                'reference' => 'Manual Move',
+            ]);
+
+            DB::commit();
+
+            // Increment data pulse version
+            DB::table('universal_searches')->where('id', 1)->increment('data_pulse_version');
+
+            return back()->with('success', $msg);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error transferring stock: ' . $e->getMessage());
         }
     }
 }

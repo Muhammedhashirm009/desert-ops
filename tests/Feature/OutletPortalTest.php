@@ -152,6 +152,7 @@ class OutletPortalTest extends TestCase
             'outlet_id' => $this->ownOutlet->id,
             'product_id' => $this->product->id,
             'quantity' => 40.00,
+            'showcase_quantity' => 40.00,
         ]);
 
         $response = $this->actingAs($this->ownOutlet, 'outlet')
@@ -194,6 +195,7 @@ class OutletPortalTest extends TestCase
             'outlet_id' => $this->franchiseOutlet->id,
             'product_id' => $this->product->id,
             'quantity' => 30.00,
+            'showcase_quantity' => 30.00,
         ]);
 
         $response = $this->actingAs($this->franchiseOutlet, 'outlet')
@@ -236,6 +238,7 @@ class OutletPortalTest extends TestCase
             'outlet_id' => $this->ownOutlet->id,
             'product_id' => $this->product->id,
             'quantity' => 5.00,
+            'showcase_quantity' => 5.00,
         ]);
 
         $response = $this->actingAs($this->ownOutlet, 'outlet')

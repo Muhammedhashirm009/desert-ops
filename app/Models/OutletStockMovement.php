@@ -6,27 +6,23 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class OutletStock extends Model
+class OutletStockMovement extends Model
 {
     use HasFactory;
-
-    protected $table = 'outlet_stocks';
 
     protected $fillable = [
         'outlet_id',
         'product_id',
         'material_id',
+        'from_location',
+        'to_location',
         'quantity',
-        'store_quantity',
-        'kitchen_quantity',
-        'showcase_quantity',
+        'logged_by',
+        'reference',
     ];
 
     protected $casts = [
         'quantity' => 'decimal:2',
-        'store_quantity' => 'decimal:2',
-        'kitchen_quantity' => 'decimal:2',
-        'showcase_quantity' => 'decimal:2',
     ];
 
     public function outlet(): BelongsTo

@@ -168,10 +168,26 @@ class DispatchController extends Controller
                     $search,
                     [
                         'quantity' => 0.00,
+                        'store_quantity' => 0.00,
+                        'kitchen_quantity' => 0.00,
+                        'showcase_quantity' => 0.00,
                     ]
                 );
 
+                $outletStock->increment('store_quantity', $item->quantity);
                 $outletStock->increment('quantity', $item->quantity);
+
+                // Log movement
+                \App\Models\OutletStockMovement::create([
+                    'outlet_id' => $dispatch->outlet_id,
+                    'product_id' => $item->product_id,
+                    'material_id' => $item->material_id,
+                    'from_location' => 'external',
+                    'to_location' => 'store',
+                    'quantity' => $item->quantity,
+                    'logged_by' => 'Central Kitchen Dispatch',
+                    'reference' => $dispatch->dispatch_number,
+                ]);
             }
 
             // 2. Update status

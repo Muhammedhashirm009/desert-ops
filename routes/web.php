@@ -89,6 +89,8 @@ Route::middleware(['auth'])->group(function () {
 
     // 6. Distribution & Outlets (Outlets, Sales Logs)
     Route::middleware(['role:admin,gm'])->group(function () {
+        Route::get('outlets/monitor', [\App\Http\Controllers\OutletMonitorController::class, 'index'])->name('outlets.monitor');
+        Route::get('outlets/showcase-requests', [\App\Http\Controllers\OutletMonitorController::class, 'showcaseRequests'])->name('outlets.showcase-requests');
         Route::resource('outlets', OutletController::class);
         Route::post('outlets/{outlet}/assignments', [OutletController::class, 'updateAssignments'])->name('outlets.update-assignments');
         Route::get('api/outlets/{outlet}/assigned-products', [OutletController::class, 'assignedProducts'])->name('api.outlets.assigned-products');
@@ -153,6 +155,16 @@ Route::middleware(['portal.outlet'])->group(function () {
     // Product requests
     Route::get('portal/requests/create', [OutletPortalController::class, 'requestsCreate'])->name('portal.requests.create');
     Route::post('portal/requests', [OutletPortalController::class, 'requestsStore'])->name('portal.requests.store');
+
+    // Internal Stock Movements & Showcase Requests
+    Route::post('portal/stock/move', [OutletPortalController::class, 'moveStock'])->name('portal.stock.move');
+    Route::get('portal/showcase-requests', [\App\Http\Controllers\PortalShowcaseRequestController::class, 'index'])->name('portal.showcase-requests.index');
+    Route::get('portal/showcase-requests/create', [\App\Http\Controllers\PortalShowcaseRequestController::class, 'create'])->name('portal.showcase-requests.create');
+    Route::post('portal/showcase-requests', [\App\Http\Controllers\PortalShowcaseRequestController::class, 'store'])->name('portal.showcase-requests.store');
+    Route::get('portal/showcase-requests/{showcaseRequest}', [\App\Http\Controllers\PortalShowcaseRequestController::class, 'show'])->name('portal.showcase-requests.show');
+    Route::post('portal/showcase-requests/{showcaseRequest}/approve', [\App\Http\Controllers\PortalShowcaseRequestController::class, 'approve'])->name('portal.showcase-requests.approve');
+    Route::post('portal/showcase-requests/{showcaseRequest}/reject', [\App\Http\Controllers\PortalShowcaseRequestController::class, 'reject'])->name('portal.showcase-requests.reject');
+    Route::post('portal/showcase-requests/{showcaseRequest}/release', [\App\Http\Controllers\PortalShowcaseRequestController::class, 'release'])->name('portal.showcase-requests.release');
 
     // Portal Live Notification API routes
     Route::get('portal/api/notifications', function() {

@@ -54,4 +54,9 @@ class Material extends Model
     {
         return $this->current_stock <= $this->min_stock_alert;
     }
+
+    public function outletStockMovements(): HasMany
+    {
+        return $this->hasMany(OutletStockMovement::class);
+    }
 }

@@ -37,7 +37,10 @@
           <tr>
             <th>SKU</th>
             <th>Dessert Product</th>
-            <th style="text-align: right;">Current Stock</th>
+            <th style="text-align: right;">Store Stock</th>
+            <th style="text-align: right;">Kitchen Stock</th>
+            <th style="text-align: right;">Showcase Stock</th>
+            <th style="text-align: right;">Total Stock</th>
             <th style="text-align: right;">Unit Price (₹)</th>
           </tr>
         </thead>
@@ -46,7 +49,16 @@
           <tr>
             <td data-label="SKU" class="mono">{{ $stock->product ? $stock->product->sku : ($stock->material ? $stock->material->sku : 'N/A') }}</td>
             <td data-label="Product" style="font-weight: 600;">{{ $stock->product ? $stock->product->name : ($stock->material ? $stock->material->name : 'Unknown') }}</td>
-            <td data-label="Stock" class="mono font-semibold" style="text-align: right; color: var(--green-tx); font-weight: 600;">
+            <td data-label="Store Stock" class="mono" style="text-align: right;">
+              {{ number_format($stock->store_quantity, 0) }}
+            </td>
+            <td data-label="Kitchen Stock" class="mono" style="text-align: right;">
+              {{ number_format($stock->kitchen_quantity, 0) }}
+            </td>
+            <td data-label="Showcase Stock" class="mono" style="text-align: right;">
+              {{ number_format($stock->showcase_quantity, 0) }}
+            </td>
+            <td data-label="Total Stock" class="mono font-semibold" style="text-align: right; color: var(--green-tx); font-weight: 600;">
               {{ number_format($stock->quantity, 0) }} {{ $stock->product ? 'Units' : 'Pcs' }}
             </td>
             <td data-label="Price" class="mono" style="text-align: right;">
@@ -61,7 +73,7 @@
           </tr>
           @empty
           <tr>
-            <td colspan="4" class="text-center td2" style="padding: 30px 10px;">
+            <td colspan="7" class="text-center td2" style="padding: 30px 10px;">
               No stock dispatched to this location yet. 
               <div style="margin-top:10px;">
                 <a href="{{ route('dispatches.create', ['outlet_id' => $outlet->id]) }}" class="btn-pri" style="display:inline-flex;">

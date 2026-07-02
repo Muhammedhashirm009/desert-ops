@@ -32,4 +32,14 @@ class Product extends Model
     {
         return $this->belongsToMany(Outlet::class, 'outlet_product')->withTimestamps();
     }
+
+    public function showcaseRequestItems(): HasMany
+    {
+        return $this->hasMany(ShowcaseRequestItem::class);
+    }
+
+    public function outletStockMovements(): HasMany
+    {
+        return $this->hasMany(OutletStockMovement::class);
+    }
 }

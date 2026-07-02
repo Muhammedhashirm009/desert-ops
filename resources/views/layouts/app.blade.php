@@ -339,8 +339,14 @@
   <div class="sb-grp">
     <div class="sb-grp-label">Distribution</div>
     @if(in_array(auth()->user()->role, ['admin', 'gm']))
-    <a href="{{ route('outlets.index') }}" class="nav-i {{ request()->routeIs('outlets.*') ? 'on' : '' }}">
+    <a href="{{ route('outlets.index') }}" class="nav-i {{ request()->routeIs('outlets.index') || request()->routeIs('outlets.create') || request()->routeIs('outlets.edit') || request()->routeIs('outlets.show') ? 'on' : '' }}">
       <span class="ni"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>Outlets Management
+    </a>
+    <a href="{{ route('outlets.monitor') }}" class="nav-i {{ request()->routeIs('outlets.monitor') ? 'on' : '' }}">
+      <span class="ni"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>Outlet Monitor
+    </a>
+    <a href="{{ route('outlets.showcase-requests') }}" class="nav-i {{ request()->routeIs('outlets.showcase-requests') ? 'on' : '' }}">
+      <span class="ni"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>Showcase Requests
     </a>
     @endif
     <a href="{{ route('dispatches.orders') }}" class="nav-i {{ request()->routeIs('dispatches.orders') ? 'on' : '' }}">

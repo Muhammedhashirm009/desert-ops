@@ -70,16 +70,19 @@
       <div class="ch-ic" style="background:var(--div);">
         <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--txt2)"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
       </div>
-      <div class="ch-title">Current In-Store Inventory</div>
+      <div class="ch-title">Current Local Inventory & Stock Locations</div>
     </div>
     <table class="tbl">
       <thead>
         <tr>
           <th>SKU</th>
           <th>Dessert Product</th>
-          <th style="text-align: right;">Current Stock</th>
+          <th style="text-align: right;">Store Stock</th>
+          <th style="text-align: right;">Kitchen Stock</th>
+          <th style="text-align: right;">Showcase Stock</th>
+          <th style="text-align: right;">Total Stock</th>
           <th style="text-align: right;">Retail Price</th>
-          <th>Status</th>
+          <th style="text-align: center;">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -88,7 +91,10 @@
           $isProduct = (bool)$stock->product_id;
           $name = $isProduct ? $stock->product->name : $stock->material->name;
           $sku = $isProduct ? $stock->product->sku : $stock->material->sku;
-          $qty = $stock->quantity;
+          $storeQty = $stock->store_quantity;
+          $kitchenQty = $stock->kitchen_quantity;
+          $showcaseQty = $stock->showcase_quantity;
+          $totalQty = $stock->quantity;
           $unit = $isProduct ? 'Units' : 'Pieces';
           $priceText = $isProduct ? '₹' . number_format($stock->product->retail_price, 2) : 'N/A';
         @endphp
@@ -100,23 +106,48 @@
               <span style="font-size: 11px; font-weight: normal; color: var(--txt3);"> (Packaging)</span>
             @endif
           </td>
-          <td data-label="Current Stock" class="mono font-semibold" style="text-align: right; color: var(--green-tx); font-weight: 600;">
-            {{ number_format($qty, 0) }} {{ $unit }}
+          <td data-label="Store Stock" class="mono" style="text-align: right; color: var(--txt2);">
+            {{ number_format($storeQty, 0) }} {{ $unit }}
+          </td>
+          <td data-label="Kitchen Stock" class="mono" style="text-align: right; color: var(--txt2);">
+            {{ number_format($kitchenQty, 0) }} {{ $unit }}
+          </td>
+          <td data-label="Showcase Stock" class="mono font-semibold" style="text-align: right; color: var(--green-tx); font-weight: 600;">
+            {{ number_format($showcaseQty, 0) }} {{ $unit }}
+          </td>
+          <td data-label="Total Stock" class="mono" style="text-align: right; color: var(--txt3);">
+            {{ number_format($totalQty, 0) }} {{ $unit }}
           </td>
           <td data-label="Retail Price" class="mono" style="text-align: right;">{{ $priceText }}</td>
-          <td data-label="Status">
-            @if($qty > 20)
-              <span class="badge bg">Good Stock</span>
-            @elseif($qty > 0)
-              <span class="badge ba">Low Stock</span>
-            @else
-              <span class="badge br">Out of Stock</span>
-            @endif
+          <td data-label="Actions" style="text-align: center;">
+            <div style="display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;">
+              @if($storeQty > 0)
+                <button type="button" class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="openMoveStockModal({{ $stock->id }}, '{{ addslashes($name) }}', 'store', 'kitchen', {{ $storeQty }}, '{{ $unit }}')">
+                  Store ➔ Kitchen
+                </button>
+                @if($isProduct)
+                  <button type="button" class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="openMoveStockModal({{ $stock->id }}, '{{ addslashes($name) }}', 'store', 'showcase', {{ $storeQty }}, '{{ $unit }}')">
+                    Store ➔ Showcase
+                  </button>
+                @endif
+              @endif
+              @if($kitchenQty > 0)
+                @if($isProduct)
+                  <button type="button" class="btn-ghost" style="padding: 4px 8px; font-size: 11px;" onclick="openMoveStockModal({{ $stock->id }}, '{{ addslashes($name) }}', 'kitchen', 'showcase', {{ $kitchenQty }}, '{{ $unit }}')">
+                    Kitchen ➔ Showcase
+                  </button>
+                @else
+                  <button type="button" class="btn-ghost" style="padding: 4px 8px; font-size: 11px; color: var(--red);" onclick="openMoveStockModal({{ $stock->id }}, '{{ addslashes($name) }}', 'kitchen', 'consumed', {{ $kitchenQty }}, '{{ $unit }}')">
+                    Consume Material
+                  </button>
+                @endif
+              @endif
+            </div>
           </td>
         </tr>
         @empty
         <tr>
-          <td colspan="5" class="text-center td2" style="padding:30px;">
+          <td colspan="8" class="text-center td2" style="padding:30px;">
             No inventory stocked at this outlet yet. Confirm delivery of incoming shipments to populate.
           </td>
         </tr>
@@ -182,4 +213,89 @@
     </div>
   </div>
 </div>
+
+<!-- Move Stock Modal -->
+<div id="move-stock-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; padding: 16px; box-sizing: border-box;">
+  <div class="card" style="max-width: 480px; width: 100%; background: var(--card); border: 1px solid var(--border); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15); border-radius: var(--radius); overflow: hidden;">
+    <div class="ch" style="border-bottom: 1px solid var(--div); padding: 16px 20px;">
+      <div class="ch-title" id="move-modal-title">Move Stock</div>
+      <button type="button" class="btn-ghost" style="padding: 4px; display: inline-flex;" onclick="closeMoveStockModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form action="{{ route('portal.stock.move') }}" method="POST">
+      @csrf
+      <input type="hidden" name="stock_id" id="move_stock_id">
+      <input type="hidden" name="from_location" id="move_from_location">
+      <input type="hidden" name="to_location" id="move_to_location">
+
+      <div class="cb" style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+        <div>
+          <label class="lbl" style="margin-bottom: 6px;" id="move-quantity-lbl">Quantity to Move</label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="number" name="quantity" id="move_quantity" class="txt" style="flex: 1;" required min="0.01" step="0.01">
+            <span id="move-unit" style="font-size: 13px; font-weight: 500; color: var(--txt2);"></span>
+          </div>
+          <div style="font-size: 12px; color: var(--txt3); margin-top: 6px;" id="move-modal-max-lbl"></div>
+        </div>
+      </div>
+      <div class="cf" style="padding: 14px 20px; background: var(--bg); border-top: 1px solid var(--div); display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn-ghost" onclick="closeMoveStockModal()">Cancel</button>
+        <button type="submit" class="btn-pri" id="move-submit-btn">Transfer Stock</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+@endsection
+
+@section('scripts')
+<script>
+function openMoveStockModal(stockId, itemName, fromLoc, toLoc, maxQty, unit) {
+    document.getElementById('move_stock_id').value = stockId;
+    document.getElementById('move_from_location').value = fromLoc;
+    document.getElementById('move_to_location').value = toLoc;
+    
+    // Update labels
+    let title = '';
+    let btnText = '';
+    let labelText = '';
+    if (toLoc === 'consumed') {
+        title = `Consume ${itemName} from Kitchen`;
+        btnText = 'Confirm Consumption';
+        labelText = 'Quantity Consumed';
+    } else {
+        title = `Move ${itemName}: ${fromLoc.toUpperCase()} ➔ ${toLoc.toUpperCase()}`;
+        btnText = 'Transfer Stock';
+        labelText = 'Quantity to Transfer';
+    }
+    
+    document.getElementById('move-modal-title').textContent = title;
+    document.getElementById('move-submit-btn').textContent = btnText;
+    document.getElementById('move-quantity-lbl').textContent = labelText;
+    
+    const qtyInput = document.getElementById('move_quantity');
+    qtyInput.max = maxQty;
+    qtyInput.value = maxQty; // Default to max
+    qtyInput.min = 0.01;
+    qtyInput.step = 0.01;
+    
+    document.getElementById('move-unit').textContent = unit;
+    document.getElementById('move-modal-max-lbl').textContent = `Max available: ${maxQty} ${unit}`;
+    
+    // Show modal
+    document.getElementById('move-stock-modal').style.display = 'flex';
+}
+
+function closeMoveStockModal() {
+    document.getElementById('move-stock-modal').style.display = 'none';
+}
+
+// Close on escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeMoveStockModal();
+    }
+});
+</script>
 @endsection
