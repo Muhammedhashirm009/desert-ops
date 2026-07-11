@@ -4,6 +4,9 @@
 @section('breadcrumb', 'Store Dashboard')
 
 @section('content')
+@php
+  $isOutletAdmin = session('portal_employee_role', 'outlet_admin') === 'outlet_admin';
+@endphp
 <div class="ph">
   <div>
     <div class="ph-title">{{ $outlet->name }} Portal</div>
@@ -13,6 +16,9 @@
     <a href="{{ route('portal.sales.create') }}" class="btn-pri">
       <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Log Daily Sales
+    </a>
+    <a href="{{ route('portal.showcase-requests.create') }}" class="btn-ghost">
+      Request Showcase
     </a>
   </div>
 </div>
@@ -58,8 +64,13 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="color:var(--amber-tx);"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       </div>
     </div>
+    @if($isOutletAdmin)
     <div class="kpi-val">₹{{ number_format($recentSales->sum('net_revenue'), 2) }}</div>
     <div class="kpi-lbl">Net Revenue (Recent Logs)</div>
+    @else
+    <div class="kpi-val">{{ $recentSales->sum(fn($s) => $s->items->sum('quantity_sold')) }}</div>
+    <div class="kpi-lbl">Total Units Sold (Recent)</div>
+    @endif
   </div>
 </div>
 
@@ -80,29 +91,48 @@
           <th style="text-align: right;">Store Stock</th>
           <th style="text-align: right;">Kitchen Stock</th>
           <th style="text-align: right;">Showcase Stock</th>
-          <th style="text-align: right;">Total Stock</th>
+          <th style="text-align: right;">Opening Stock</th>
+          <th style="text-align: right;">Closing Stock</th>
+          @if($isOutletAdmin)
           <th style="text-align: right;">Retail Price</th>
+          @endif
+          @if($isOutletAdmin)
           <th style="text-align: center;">Actions</th>
+          @endif
         </tr>
       </thead>
       <tbody>
         @forelse($outlet->stocks as $stock)
         @php
           $isProduct = (bool)$stock->product_id;
-          $name = $isProduct ? $stock->product->name : $stock->material->name;
-          $sku = $isProduct ? $stock->product->sku : $stock->material->sku;
+          $isCatalogItem = (bool)$stock->outlet_catalog_item_id;
+          if ($isCatalogItem && $stock->catalogItem) {
+            $name = $stock->catalogItem->name;
+            $sku = $stock->catalogItem->sku;
+            $priceText = '₹' . number_format($stock->catalogItem->retail_price, 2);
+          } elseif ($isProduct) {
+            $name = $stock->product->name;
+            $sku = $stock->product->sku;
+            $priceText = '₹' . number_format($stock->product->retail_price, 2);
+          } else {
+            $name = $stock->material ? $stock->material->name : 'Unknown';
+            $sku = $stock->material ? $stock->material->sku : 'N/A';
+            $priceText = 'N/A';
+          }
           $storeQty = $stock->store_quantity;
           $kitchenQty = $stock->kitchen_quantity;
           $showcaseQty = $stock->showcase_quantity;
-          $totalQty = $stock->quantity;
-          $unit = $isProduct ? 'Units' : 'Pieces';
-          $priceText = $isProduct ? '₹' . number_format($stock->product->retail_price, 2) : 'N/A';
+          $unit = ($isProduct || $isCatalogItem) ? 'Units' : 'Pieces';
+          $openingStock = $stock->opening_stock ?? $stock->quantity;
+          $closingStock = $stock->closing_stock ?? $stock->quantity;
         @endphp
         <tr>
           <td data-label="SKU" class="mono">{{ $sku }}</td>
           <td data-label="Dessert Product" style="font-weight: 600;">
             {{ $name }}
-            @if(!$isProduct)
+            @if($isCatalogItem)
+              <span class="badge bp" style="font-size: 9px; vertical-align: middle; margin-left: 4px;">RECIPE</span>
+            @elseif(!$isProduct)
               <span style="font-size: 11px; font-weight: normal; color: var(--txt3);"> (Packaging)</span>
             @endif
           </td>
@@ -115,10 +145,14 @@
           <td data-label="Showcase Stock" class="mono font-semibold" style="text-align: right; color: var(--green-tx); font-weight: 600;">
             {{ number_format($showcaseQty, 0) }} {{ $unit }}
           </td>
-          <td data-label="Total Stock" class="mono" style="text-align: right; color: var(--txt3);">
-            {{ number_format($totalQty, 0) }} {{ $unit }}
+          <td data-label="Opening Stock" class="mono" style="text-align: right; color: var(--txt3);">
+            {{ number_format($openingStock, 0) }} {{ $unit }}
           </td>
-          <td data-label="Retail Price" class="mono" style="text-align: right;">{{ $priceText }}</td>
+          <td data-label="Closing Stock" class="mono font-semibold" style="text-align: right; color: var(--txt); font-weight: 600;">
+            {{ number_format($closingStock, 0) }} {{ $unit }}
+          </td>
+          <td data-label="Retail Price" class="mono" style="text-align: right;">@if($isOutletAdmin){{ $priceText }}@else — @endif</td>
+          @if($isOutletAdmin)
           <td data-label="Actions" style="text-align: center;">
             <div style="display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;">
               @if($storeQty > 0)
@@ -144,10 +178,11 @@
               @endif
             </div>
           </td>
+          @endif
         </tr>
         @empty
         <tr>
-          <td colspan="8" class="text-center td2" style="padding:30px;">
+          <td colspan="{{ $isOutletAdmin ? 8 : 6 }}" class="text-center td2" style="padding:30px;">
             No inventory stocked at this outlet yet. Confirm delivery of incoming shipments to populate.
           </td>
         </tr>
@@ -198,7 +233,11 @@
                 Report: {{ $log->log_date->format('Y-m-d') }}
               </div>
               <div class="act-de" style="font-size: 11.5px; color: var(--txt2); margin-top: 2px;">
+                @if($isOutletAdmin)
                 Gross Sales: <b>₹{{ number_format($log->total_revenue, 2) }}</b>
+                @else
+                Items sold: <b>{{ $log->items->sum('quantity_sold') }} units</b>
+                @endif
               </div>
               <div class="act-tm">Logged {{ $log->created_at->diffForHumans() }}</div>
             </div>

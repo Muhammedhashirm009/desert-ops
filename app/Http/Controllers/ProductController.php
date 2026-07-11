@@ -10,6 +10,27 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::orderBy('name', 'asc')->get();
+
+        $today = now()->startOfDay();
+
+        // Query today's completed production runs
+        $todayProduction = \App\Models\ProductionRun::where('status', 'completed')
+            ->where('prepared_date', '>=', $today)
+            ->get();
+
+        // Query today's dispatches
+        $todayDispatches = \App\Models\DispatchItem::whereHas('dispatch', function($q) use ($today) {
+            $q->whereIn('status', ['dispatched', 'received'])->where('dispatch_date', '>=', $today);
+        })->get();
+
+        foreach ($products as $product) {
+            $additions = $todayProduction->where('product_id', $product->id)->sum('quantity_produced');
+            $subtractions = $todayDispatches->where('product_id', $product->id)->sum('quantity');
+
+            $product->opening_stock = $product->current_kitchen_stock - $additions + $subtractions;
+            $product->closing_stock = $product->current_kitchen_stock;
+        }
+
         return view('products.index', compact('products'));
     }
 

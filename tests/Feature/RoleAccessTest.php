@@ -97,9 +97,9 @@ class RoleAccessTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_kitchen_chef_access()
+    public function test_laban_chef_access()
     {
-        $chef = $this->createUser('kitchen_chef');
+        $chef = $this->createUser('laban_chef');
 
         // Chef can access production runs index
         $response = $this->actingAs($chef)->get(route('production-runs.index'));
@@ -163,9 +163,9 @@ class RoleAccessTest extends TestCase
         $admin = $this->createUser('admin');
         $gm = $this->createUser('gm');
         $manager = $this->createUser('store_manager');
-        $otherChef = $this->createUser('kitchen_chef');
+        $otherChef = $this->createUser('laban_chef');
 
-        $chef = $this->createUser('kitchen_chef');
+        $chef = $this->createUser('laban_chef');
         $material = Material::create([
             'name' => 'Salt',
             'sku' => 'RAW-SALT',
@@ -207,10 +207,10 @@ class RoleAccessTest extends TestCase
         // Create recipient users first
         $admin = $this->createUser('admin');
         $gm = $this->createUser('gm');
-        $otherChef = $this->createUser('kitchen_chef');
+        $otherChef = $this->createUser('laban_chef');
         $otherManager = $this->createUser('store_manager');
 
-        $chef = $this->createUser('kitchen_chef');
+        $chef = $this->createUser('laban_chef');
         $manager = $this->createUser('store_manager');
 
         $material = Material::create([
@@ -265,7 +265,7 @@ class RoleAccessTest extends TestCase
         // Create recipient users first
         $admin = $this->createUser('admin');
         $gm = $this->createUser('gm');
-        $chef = $this->createUser('kitchen_chef');
+        $chef = $this->createUser('laban_chef');
         $manager = $this->createUser('store_manager');
         $accountant = $this->createUser('accountant');
 

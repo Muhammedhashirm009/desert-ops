@@ -64,7 +64,12 @@
 
           <div class="form-grp" style="margin-top: 16px;">
             <label for="requested_by">Requested By *</label>
-            <input type="text" name="requested_by" id="requested_by" class="form-input" required value="{{ old('requested_by', $outlet->contact_person ?? '') }}" placeholder="Your Name" style="font-size: 13px;">
+            @if(session('portal_employee_name'))
+              <input type="text" name="requested_by" id="requested_by" class="form-input" required value="{{ session('portal_employee_name') }}" readonly style="font-size: 13px; background: var(--bg); cursor: not-allowed;">
+              <div style="font-size: 11px; color: var(--txt3); margin-top: 4px;">Auto-filled from your logged-in account</div>
+            @else
+              <input type="text" name="requested_by" id="requested_by" class="form-input" required value="{{ old('requested_by', $outlet->contact_person ?? '') }}" placeholder="Your Name" style="font-size: 13px;">
+            @endif
             @error('requested_by')<span style="color: var(--red-tx); font-size: 12px;">{{ $message }}</span>@enderror
           </div>
 

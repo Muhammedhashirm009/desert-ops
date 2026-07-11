@@ -30,7 +30,8 @@
         <th>SKU</th>
         <th>Product Name</th>
         <th style="text-align: right;">Retail Price</th>
-        <th style="text-align: right;">Kitchen Stock</th>
+        <th style="text-align: right;">Opening Stock</th>
+        <th style="text-align: right;">Closing Stock</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -45,8 +46,11 @@
         <td data-label="Retail Price" class="mono font-semibold" style="text-align: right;">
           ₹{{ number_format($product->retail_price, 2) }}
         </td>
-        <td data-label="Kitchen Stock" class="mono font-semibold" style="text-align: right; padding-right: 20px; color: {{ $product->current_kitchen_stock > 0 ? 'var(--green-tx)' : 'var(--red-tx)' }};">
-          {{ number_format($product->current_kitchen_stock, 0) }} units
+        <td data-label="Opening Stock" class="mono" style="text-align: right; color: var(--txt3);">
+          {{ number_format($product->opening_stock ?? $product->current_kitchen_stock, 0) }} units
+        </td>
+        <td data-label="Closing Stock" class="mono font-semibold" style="text-align: right; color: {{ ($product->closing_stock ?? $product->current_kitchen_stock) > 0 ? 'var(--green-tx)' : 'var(--red-tx)' }};">
+          {{ number_format($product->closing_stock ?? $product->current_kitchen_stock, 0) }} units
         </td>
         <td data-label="Actions">
           <div style="display: flex; gap: 10px;">

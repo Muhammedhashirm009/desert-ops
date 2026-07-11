@@ -50,12 +50,17 @@ class Outlet extends Authenticatable
 
     public function assignedProducts(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class, 'outlet_product')->withTimestamps();
+        return $this->belongsToMany(Product::class, 'outlet_product')->withPivot('type')->withTimestamps();
     }
 
     public function assignedMaterials(): BelongsToMany
     {
         return $this->belongsToMany(Material::class, 'outlet_product')->withTimestamps();
+    }
+
+    public function assignedCatalogItems(): BelongsToMany
+    {
+        return $this->belongsToMany(OutletCatalogItem::class, 'outlet_catalog_assignments')->withTimestamps();
     }
 
     public function showcaseRequests(): HasMany
@@ -66,5 +71,10 @@ class Outlet extends Authenticatable
     public function stockMovements(): HasMany
     {
         return $this->hasMany(OutletStockMovement::class);
+    }
+
+    public function employees(): HasMany
+    {
+        return $this->hasMany(OutletEmployee::class);
     }
 }

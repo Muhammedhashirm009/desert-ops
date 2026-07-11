@@ -97,7 +97,10 @@
   </div>
 
   @php
-    $currentOutlet = \Illuminate\Support\Facades\Auth::guard('outlet')->user();
+    $currentOutlet = \App\Models\Outlet::find(session('portal_outlet_id'));
+    $portalRole = session('portal_employee_role', 'outlet_admin');
+    $portalName = session('portal_employee_name', ($currentOutlet ? $currentOutlet->name : 'Outlet Portal User'));
+    $isOutletAdmin = ($portalRole === 'outlet_admin');
   @endphp
 
   @if($currentOutlet)
@@ -110,6 +113,13 @@
     <span class="badge {{ $currentOutlet->type === 'own' ? 'bg' : 'bp' }}" style="font-size:9.5px; padding:1px 5px; margin-top:4px;">
       {{ $currentOutlet->type === 'own' ? 'Company Owned' : 'Franchise' }}
     </span>
+    <div style="font-size:11px; color:var(--sb-text-hi); margin-top:6px; font-weight:500; display:flex; align-items:center; gap:5px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px; height:12px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      {{ $portalName }}
+    </div>
+    <span class="badge {{ $isOutletAdmin ? 'bg' : 'bp' }}" style="font-size:9px; padding:1px 5px; margin-top:2px;">
+      {{ $isOutletAdmin ? 'Admin' : 'Salesperson' }}
+    </span>
   </div>
   @endif
 
@@ -118,6 +128,7 @@
     <a href="{{ route('portal.dashboard') }}" class="nav-i {{ request()->routeIs('portal.dashboard') ? 'on' : '' }}">
       <span class="ni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>Store Dashboard
     </a>
+    @if($isOutletAdmin)
     <a href="{{ route('portal.dispatches') }}" class="nav-i {{ request()->routeIs('portal.dispatches') ? 'on' : '' }}">
       <span class="ni"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></span>Incoming Shipments
       @if($currentOutlet)
@@ -129,24 +140,45 @@
         @endif
       @endif
     </a>
+    @endif
     <a href="{{ route('portal.sales.index') }}" class="nav-i {{ request()->routeIs('portal.sales.*') ? 'on' : '' }}">
       <span class="ni"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Daily Sales Logs
     </a>
+    <a href="{{ route('portal.stock-report') }}" class="nav-i {{ request()->routeIs('portal.stock-report') ? 'on' : '' }}">
+      <span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>Daily Stock Report
+    </a>
+    @if($isOutletAdmin)
     <a href="{{ route('portal.requests.create') }}" class="nav-i {{ request()->routeIs('portal.requests.*') ? 'on' : '' }}">
       <span class="ni"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>Request Products
     </a>
+    @endif
     <a href="{{ route('portal.showcase-requests.index') }}" class="nav-i {{ request()->routeIs('portal.showcase-requests.*') ? 'on' : '' }}">
       <span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></span>Showcase Requests
     </a>
+    <a href="{{ route('portal.production.index') }}" class="nav-i {{ request()->routeIs('portal.production.*') ? 'on' : '' }}">
+      <span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></span>Kitchen Production
+    </a>
   </div>
+
+  @if($isOutletAdmin)
+  <div class="sb-sep"></div>
+  <div class="sb-grp">
+    <div class="sb-grp-label">Administration</div>
+    <a href="{{ route('portal.employees.index') }}" class="nav-i {{ request()->routeIs('portal.employees.*') ? 'on' : '' }}">
+      <span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Manage Employees
+    </a>
+  </div>
+  @endif
 
   <div class="sb-sep"></div>
 
   <div class="sb-grp">
     <div class="sb-grp-label">Systems</div>
+    @if($isOutletAdmin)
     <a href="{{ route('dashboard') }}" class="nav-i" style="color: var(--txt3);">
       <span class="ni"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>Go to Admin ERP
     </a>
+    @endif
   </div>
 
   <div class="sb-foot">
@@ -189,8 +221,9 @@
     </div>
 
     <div class="tb-user" style="cursor: default;">
-      <div class="tb-uav" style="background:var(--purple-tx);">OP</div>
-      <span class="tb-uname">{{ $currentOutlet ? $currentOutlet->name : 'Outlet Portal User' }}</span>
+      <div class="tb-uav" style="background:{{ $isOutletAdmin ? 'var(--green-tx)' : 'var(--purple-tx)' }};">{{ strtoupper(substr($portalName, 0, 2)) }}</div>
+      <span class="tb-uname">{{ $portalName }}</span>
+      <span class="badge {{ $isOutletAdmin ? 'bg' : 'bp' }}" style="font-size: 9px; padding: 1px 5px; margin-left: 4px;">{{ $isOutletAdmin ? 'Admin' : 'Sales' }}</span>
     </div>
   </header>
 
@@ -206,6 +239,19 @@
           <div class="alert alert-danger">
               {{ session('error') }}
           </div>
+      @endif
+
+      @if(!request()->routeIs('portal.dashboard'))
+      <!-- ══ PAGE SEARCH BAR ══ -->
+      <div class="page-search-bar" id="page-search-bar">
+        <div class="page-search-inner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="page-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="page-search-input" placeholder="Search this page..." autocomplete="off">
+          <button type="button" id="page-search-clear" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
       @endif
 
       @yield('content')
@@ -479,6 +525,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>Home</span>
   </a>
+  @if($isOutletAdmin)
   <a href="{{ route('portal.dispatches') }}" class="mobile-tab {{ request()->routeIs('portal.dispatches') ? 'active' : '' }}">
     <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
     <span>Shipments</span>
@@ -491,14 +538,22 @@ document.addEventListener('DOMContentLoaded', function() {
       @endif
     @endif
   </a>
+  @endif
   <a href="{{ route('portal.sales.index') }}" class="mobile-tab {{ request()->routeIs('portal.sales.*') ? 'active' : '' }}">
     <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
     <span>Sales Logs</span>
   </a>
+  @if($isOutletAdmin)
   <a href="{{ route('portal.requests.create') }}" class="mobile-tab {{ request()->routeIs('portal.requests.*') ? 'active' : '' }}">
     <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     <span>Order</span>
   </a>
+  @else
+  <a href="{{ route('portal.showcase-requests.index') }}" class="mobile-tab {{ request()->routeIs('portal.showcase-requests.*') ? 'active' : '' }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+    <span>Showcase</span>
+  </a>
+  @endif
   <button type="button" class="mobile-tab" id="mobile-more-tab-btn">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
     <span>More</span>
@@ -536,19 +591,52 @@ document.addEventListener('DOMContentLoaded', function() {
       <span>Tap your browser's menu (e.g. three dots in Chrome, or Share button in Safari on iOS) and select <strong>"Add to Home Screen"</strong>.</span>
     </div>
 
+    <!-- Navigation Items -->
+    <a href="{{ route('portal.showcase-requests.index') }}" class="bottom-sheet-item {{ request()->routeIs('portal.showcase-requests.*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+      <span>Showcase</span>
+    </a>
+
+    <a href="{{ route('portal.stock-report') }}" class="bottom-sheet-item {{ request()->routeIs('portal.stock-report') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Stock Report</span>
+    </a>
+
+    <a href="{{ route('portal.production.index') }}" class="bottom-sheet-item {{ request()->routeIs('portal.production.*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <span>Kitchen</span>
+    </a>
+
+    @if($isOutletAdmin)
+    <a href="{{ route('portal.dispatches') }}" class="bottom-sheet-item {{ request()->routeIs('portal.dispatches') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      <span>Shipments</span>
+    </a>
+
+    <a href="{{ route('portal.requests.create') }}" class="bottom-sheet-item {{ request()->routeIs('portal.requests.*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Order Stock</span>
+    </a>
+
+    <a href="{{ route('portal.employees.index') }}" class="bottom-sheet-item {{ request()->routeIs('portal.employees.*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Employees</span>
+    </a>
+    @endif
+
     <!-- Test Notifications -->
     <button type="button" class="bottom-sheet-item" id="mobile-test-notif-btn" style="border: none;">
       <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <span>Test Chime</span>
     </button>
 
-    <!-- Switch to ERP -->
+    <!-- Switch to ERP (Admin Only) -->
+    @if($isOutletAdmin)
     <a href="{{ route('dashboard') }}" class="bottom-sheet-item">
       <svg viewBox="0 0 24 24"><path d="M9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
       <span>Admin ERP</span>
     </a>
-
-
+    @endif
 
     <!-- Logout -->
     <form action="{{ route('portal.logout') }}" method="POST" style="grid-column: span 3; width: 100%;">
@@ -572,6 +660,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ══ PAGE SEARCH FILTER (Desktop + Mobile) ══
+    const searchInput = document.getElementById('page-search-input');
+    const searchClear = document.getElementById('page-search-clear');
+
+    if (searchInput) {
+        let debounceTimer;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const query = this.value.toLowerCase().trim();
+                searchClear.style.display = query ? 'block' : 'none';
+
+                // Filter table rows
+                document.querySelectorAll('table.tbl tbody tr').forEach(row => {
+                    if (row.querySelector('td[colspan]')) return; // skip empty-state rows
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(query) ? '' : 'none';
+                });
+
+                // Filter KPI cards
+                document.querySelectorAll('.kpi-grid .kpi').forEach(kpi => {
+                    const text = kpi.textContent.toLowerCase();
+                    kpi.style.display = text.includes(query) ? '' : 'none';
+                });
+            }, 150);
+        });
+
+        searchClear.addEventListener('click', function() {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+            searchInput.focus();
+        });
+    }
     // PWA Service Worker Registration
     let swRegistration = null;
     if ('serviceWorker' in navigator) {

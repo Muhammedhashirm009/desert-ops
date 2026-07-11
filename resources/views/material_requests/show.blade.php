@@ -168,7 +168,7 @@
     </div>
     @endif
 
-    @if(auth()->user()->role !== 'kitchen_chef')
+    @if(!in_array(auth()->user()->role, ['laban_chef', 'baklava_chef', 'dough_chef']))
     <div class="card">
       <div class="ch">
         <div class="ch-title">Request Notes</div>

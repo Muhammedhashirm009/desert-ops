@@ -16,6 +16,7 @@ class SalesLog extends Model
     protected $fillable = [
         'outlet_id',
         'log_date',
+        'logged_by_employee_id',
     ];
 
     protected $casts = [
@@ -30,5 +31,10 @@ class SalesLog extends Model
     public function items(): HasMany
     {
         return $this->hasMany(SalesLogItem::class);
+    }
+
+    public function loggedByEmployee(): BelongsTo
+    {
+        return $this->belongsTo(OutletEmployee::class, 'logged_by_employee_id');
     }
 }

@@ -92,6 +92,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const products = @json($products);
     const stocks = @json($stocks); // Plucked: { product_id: quantity }
+    const catalogStocks = @json(isset($catalogStocks) ? $catalogStocks : collect());
+    const isOutletAdmin = {{ session('portal_employee_role', 'outlet_admin') === 'outlet_admin' ? 'true' : 'false' }};
     
     let rowIndex = 0;
 
@@ -106,17 +108,44 @@ document.addEventListener('DOMContentLoaded', function() {
         const row = document.createElement('tr');
         row.id = `row-${rowIndex}`;
         
-        let options = '<option value="">-- Choose Dessert --</option>';
+        let options = '<option value="" data-type="">-- Choose Dessert --</option>';
+
+        // Catalog items optgroup
+        if (catalogStocks.length > 0) {
+            options += '<optgroup label="📋 Catalog Items (Recipe Products)">';
+            catalogStocks.forEach(cs => {
+                if (cs.catalog_item) {
+                    const available = parseFloat(cs.showcase_quantity);
+                    const ci = cs.catalog_item;
+                    if (isOutletAdmin) {
+                        options += `<option value="catalog_${ci.id}" data-type="catalog" data-catalog-id="${ci.id}" data-stock="${available}">[${ci.sku}] ${ci.name} (Retail: \u20b9${parseFloat(ci.retail_price).toFixed(2)} | In Stock: ${parseInt(available)})</option>`;
+                    } else {
+                        options += `<option value="catalog_${ci.id}" data-type="catalog" data-catalog-id="${ci.id}" data-stock="${available}">[${ci.sku}] ${ci.name} (In Stock: ${parseInt(available)})</option>`;
+                    }
+                }
+            });
+            options += '</optgroup>';
+        }
+
+        // Regular products optgroup
+        options += '<optgroup label="🏭 Products">';
         products.forEach(p => {
             const available = getProductStock(p.id);
-            options += `<option value="${p.id}">[${p.sku}] ${p.name} (Retail: ₹${parseFloat(p.retail_price).toFixed(2)} | In Stock: ${parseInt(available)})</option>`;
+            if (isOutletAdmin) {
+                options += `<option value="product_${p.id}" data-type="product" data-product-id="${p.id}" data-stock="${available}">[${p.sku}] ${p.name} (Retail: \u20b9${parseFloat(p.retail_price).toFixed(2)} | In Stock: ${parseInt(available)})</option>`;
+            } else {
+                options += `<option value="product_${p.id}" data-type="product" data-product-id="${p.id}" data-stock="${available}">[${p.sku}] ${p.name} (In Stock: ${parseInt(available)})</option>`;
+            }
         });
+        options += '</optgroup>';
 
         row.innerHTML = `
             <td>
-              <select name="items[${rowIndex}][product_id]" class="form-input product-select searchable-select" required style="height: 36px;">
+              <select class="form-input product-select searchable-select" required style="height: 36px;">
                 ${options}
               </select>
+              <input type="hidden" name="items[${rowIndex}][product_id]" class="hidden-product-id" value="">
+              <input type="hidden" name="items[${rowIndex}][outlet_catalog_item_id]" class="hidden-catalog-id" value="">
             </td>
             <td>
               <div style="display: flex; flex-direction: column; gap: 4px;">
@@ -142,18 +171,34 @@ document.addEventListener('DOMContentLoaded', function() {
         const qtyInput = row.querySelector('.qty-input');
         const stockLbl = row.querySelector('.stock-lbl');
         const removeBtn = row.querySelector('.remove-row-btn');
+        const hiddenProductId = row.querySelector('.hidden-product-id');
+        const hiddenCatalogId = row.querySelector('.hidden-catalog-id');
 
         function updateRowStock() {
-            const productId = select.value;
+            const val = select.value;
+            const opt = select.options[select.selectedIndex];
+            const type = opt ? (opt.dataset.type || '') : '';
 
-            if (!productId) {
+            // Set hidden inputs based on selection type
+            if (type === 'catalog') {
+                hiddenCatalogId.value = opt.dataset.catalogId;
+                hiddenProductId.value = '';
+            } else if (type === 'product') {
+                hiddenProductId.value = opt.dataset.productId;
+                hiddenCatalogId.value = '';
+            } else {
+                hiddenProductId.value = '';
+                hiddenCatalogId.value = '';
+            }
+
+            if (!val) {
                 stockLbl.textContent = 'Select a product';
                 stockLbl.style.color = 'var(--txt3)';
                 qtyInput.max = '';
                 return;
             }
 
-            const stock = getProductStock(productId);
+            const stock = parseFloat(opt.dataset.stock || 0);
             stockLbl.textContent = `Available Stock: ${parseInt(stock)} units`;
             qtyInput.max = parseInt(stock);
 
@@ -201,22 +246,23 @@ document.addEventListener('DOMContentLoaded', function() {
         rows.forEach(row => {
             const select = row.querySelector('.product-select');
             const qtyInput = row.querySelector('.qty-input');
-            const productId = select.value;
+            const val = select.value;
 
-            if (!productId) {
+            if (!val) {
                 alert('Please choose a product for all rows.');
                 hasErrors = true;
                 return;
             }
 
-            if (selectedProducts.has(productId)) {
+            if (selectedProducts.has(val)) {
                 alert('Duplicate dessert products detected. Please consolidate duplicate products into a single row.');
                 hasErrors = true;
                 return;
             }
-            selectedProducts.add(productId);
+            selectedProducts.add(val);
 
-            const stock = getProductStock(productId);
+            const opt = select.options[select.selectedIndex];
+            const stock = parseFloat(opt.dataset.stock || 0);
             const qtySold = parseInt(qtyInput.value) || 0;
             if (qtySold > stock) {
                 alert(`Cannot record sale. Quantity sold (${qtySold}) exceeds available stock (${parseInt(stock)}) for the selected product.`);

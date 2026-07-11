@@ -273,15 +273,18 @@
     </a>
   </div>
 
-  @if(in_array(auth()->user()->role, ['admin', 'gm', 'kitchen_chef', 'store_manager']))
+  @if(in_array(auth()->user()->role, ['admin', 'gm', 'laban_chef', 'baklava_chef', 'dough_chef', 'store_manager']))
   <div class="sb-grp">
     <div class="sb-grp-label">Central Kitchen</div>
-    @if(in_array(auth()->user()->role, ['admin', 'gm', 'kitchen_chef']))
+    @if(in_array(auth()->user()->role, ['admin', 'gm', 'laban_chef', 'baklava_chef', 'dough_chef']))
     <a href="{{ route('production-runs.index') }}" class="nav-i {{ request()->routeIs('production-runs.*') ? 'on' : '' }}">
       <span class="ni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></span>Production Runs
     </a>
-    <a href="{{ route('kitchen.stocks') }}" class="nav-i {{ request()->routeIs('kitchen.stocks') ? 'on' : '' }}">
+     <a href="{{ route('kitchen.stocks') }}" class="nav-i {{ request()->routeIs('kitchen.stocks') ? 'on' : '' }}">
       <span class="ni"><svg viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></span>Kitchen Stock
+    </a>
+    <a href="{{ route('kitchen.stock-report') }}" class="nav-i {{ request()->routeIs('kitchen.stock-report') ? 'on' : '' }}">
+      <span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>Kitchen Daily Stock
     </a>
     @endif
     <a href="{{ route('material-requests.index') }}" class="nav-i {{ request()->routeIs('material-requests.*') ? 'on' : '' }}">
@@ -293,15 +296,18 @@
         <span class="nb red">{{ $pendingMrCount }}</span>
       @endif
     </a>
-    @if(in_array(auth()->user()->role, ['admin', 'gm', 'kitchen_chef']))
+    @if(in_array(auth()->user()->role, ['admin', 'gm', 'laban_chef', 'baklava_chef', 'dough_chef']))
     <a href="{{ route('products.index') }}" class="nav-i {{ request()->routeIs('products.*') ? 'on' : '' }}">
       <span class="ni"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>Products Catalog
+    </a>
+    <a href="{{ route('outlet-catalog.index') }}" class="nav-i {{ request()->routeIs('outlet-catalog.*') ? 'on' : '' }}">
+      <span class="ni"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="9" y1="7" x2="16" y2="7"/><line x1="9" y1="11" x2="14" y2="11"/></svg></span>Outlet Catalog
     </a>
     @endif
   </div>
   @endif
 
-  @if(in_array(auth()->user()->role, ['admin', 'gm', 'store_manager', 'kitchen_chef']))
+  @if(in_array(auth()->user()->role, ['admin', 'gm', 'store_manager', 'laban_chef', 'baklava_chef', 'dough_chef']))
   <div class="sb-grp">
     <div class="sb-grp-label">Procurement</div>
     @if(in_array(auth()->user()->role, ['admin', 'gm', 'store_manager']))
@@ -335,7 +341,7 @@
   </div>
   @endif
 
-  @if(in_array(auth()->user()->role, ['admin', 'gm', 'kitchen_chef']))
+  @if(in_array(auth()->user()->role, ['admin', 'gm', 'laban_chef', 'baklava_chef', 'dough_chef']))
   <div class="sb-grp">
     <div class="sb-grp-label">Distribution</div>
     @if(in_array(auth()->user()->role, ['admin', 'gm']))
@@ -401,8 +407,12 @@
             General Manager
           @elseif(Auth::user()->role === 'store_manager')
             Store Manager
-          @elseif(Auth::user()->role === 'kitchen_chef')
-            Kitchen Chef
+          @elseif(Auth::user()->role === 'laban_chef')
+            Laban Chef
+          @elseif(Auth::user()->role === 'baklava_chef')
+            Baklava Chef
+          @elseif(Auth::user()->role === 'dough_chef')
+            Dough Chef
           @else
             {{ Auth::user()->role }}
           @endif
@@ -500,6 +510,19 @@
           </div>
       @endif
 
+      @if(!request()->routeIs('dashboard'))
+      <!-- ══ PAGE SEARCH BAR ══ -->
+      <div class="page-search-bar" id="page-search-bar">
+        <div class="page-search-inner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="page-search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="page-search-input" placeholder="Search this page..." autocomplete="off">
+          <button type="button" id="page-search-clear" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      @endif
+
       @yield('content')
   </div><!-- /content -->
 </div><!-- /main -->
@@ -537,7 +560,7 @@
     <span>Home</span>
   </a>
 
-  @if(auth()->user()->role === 'kitchen_chef')
+  @if(in_array(auth()->user()->role, ['laban_chef', 'baklava_chef', 'dough_chef']))
     <a href="{{ route('production-runs.index') }}" class="mobile-tab {{ request()->routeIs('production-runs.*') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
       <span>Production</span>
@@ -631,16 +654,24 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
         <span>Raw Materials</span>
       </a>
+      <a href="{{ route('kitchen.stock-report') }}" class="bottom-sheet-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Kitchen Daily Stock</span>
+      </a>
       @if(auth()->user()->role === 'admin')
         <a href="{{ route('admin.users.index') }}" class="bottom-sheet-item">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           <span>User Directory</span>
         </a>
       @endif
-    @elseif(auth()->user()->role === 'kitchen_chef')
+    @elseif(in_array(auth()->user()->role, ['laban_chef', 'baklava_chef', 'dough_chef']))
       <a href="{{ route('materials.index') }}" class="bottom-sheet-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
         <span>Raw Materials</span>
+      </a>
+      <a href="{{ route('kitchen.stock-report') }}" class="bottom-sheet-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Kitchen Daily Stock</span>
       </a>
       <a href="{{ route('products.index') }}" class="bottom-sheet-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -1165,6 +1196,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ══ Universal Search & Outlet Selector Mini-Dashboard ══
 document.addEventListener('DOMContentLoaded', function() {
+    // ══ PAGE SEARCH FILTER (Desktop + Mobile) ══
+    const pageSearchInput = document.getElementById('page-search-input');
+    const pageSearchClear = document.getElementById('page-search-clear');
+
+    if (pageSearchInput && pageSearchClear) {
+        let debounceTimer;
+        pageSearchInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const query = pageSearchInput.value.toLowerCase().trim();
+                pageSearchClear.style.display = query ? 'block' : 'none';
+
+                // Filter table rows
+                document.querySelectorAll('table.tbl tbody tr').forEach(row => {
+                    if (row.querySelector('td[colspan]')) return; // skip empty-state rows
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(query) ? '' : 'none';
+                });
+
+                // Filter KPI cards
+                document.querySelectorAll('.kpi-grid .kpi, .kpi-card').forEach(kpi => {
+                    const text = kpi.textContent.toLowerCase();
+                    kpi.style.display = text.includes(query) ? '' : 'none';
+                });
+            }, 150);
+        });
+
+        pageSearchClear.addEventListener('click', function() {
+            pageSearchInput.value = '';
+            pageSearchInput.dispatchEvent(new Event('input'));
+            pageSearchInput.focus();
+        });
+    }
+
     // 1. Universal Search Logic
     const searchInput = document.querySelector('.tb-search input');
     if (searchInput) {

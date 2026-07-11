@@ -26,7 +26,7 @@
   @endif
 </div>
 
-@if(in_array(auth()->user()->role, ['admin', 'gm', 'kitchen_chef']))
+@if(in_array(auth()->user()->role, ['admin', 'gm', 'laban_chef', 'baklava_chef', 'dough_chef']))
 <!-- Summary Strip -->
 <div class="sum-strip">
   @if(in_array(auth()->user()->role, ['admin', 'gm']))
@@ -67,12 +67,12 @@
 
 @php
   $kpiCols = 4;
-  if (auth()->user()->role === 'kitchen_chef') $kpiCols = 3;
+  if (in_array(auth()->user()->role, ['laban_chef', 'baklava_chef', 'dough_chef'])) $kpiCols = 3;
   if (auth()->user()->role === 'store_manager') $kpiCols = 2;
 @endphp
 <!-- KPI Grid -->
 <div class="kpi-grid" style="grid-template-columns: repeat({{ $kpiCols }}, 1fr);">
-  @if(in_array(auth()->user()->role, ['admin', 'gm', 'kitchen_chef']))
+  @if(in_array(auth()->user()->role, ['admin', 'gm', 'laban_chef', 'baklava_chef', 'dough_chef']))
   <div class="kpi">
     <div class="kpi-row1">
       <div class="kpi-icon" style="background:var(--purple-lt);">
@@ -113,7 +113,7 @@
   </div>
   @endif
 
-  @if(in_array(auth()->user()->role, ['admin', 'gm', 'kitchen_chef']))
+  @if(in_array(auth()->user()->role, ['admin', 'gm', 'laban_chef', 'baklava_chef', 'dough_chef']))
   <div class="kpi">
     <div class="kpi-row1">
       <div class="kpi-icon" style="background:var(--green-lt);">
@@ -150,7 +150,7 @@
   </div>
 </div>
 
-@if(in_array(auth()->user()->role, ['admin', 'gm', 'kitchen_chef']))
+@if(in_array(auth()->user()->role, ['admin', 'gm', 'laban_chef', 'baklava_chef', 'dough_chef']))
 <!-- Chart + Stock -->
 <div class="row {{ in_array(auth()->user()->role, ['admin', 'gm']) ? 'r-3-1' : '' }}" style="{{ in_array(auth()->user()->role, ['admin', 'gm']) ? '' : 'grid-template-columns: 1fr;' }}">
   <div class="card">

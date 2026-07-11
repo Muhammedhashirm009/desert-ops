@@ -50,6 +50,10 @@ return [
             'driver' => 'session',
             'provider' => 'accountants',
         ],
+        'outlet_employee' => [
+            'driver' => 'session',
+            'provider' => 'outlet_employees',
+        ],
     ],
 
     /*
@@ -82,6 +86,10 @@ return [
         'accountants' => [
             'driver' => 'eloquent',
             'model' => App\Models\Accountant::class,
+        ],
+        'outlet_employees' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\OutletEmployee::class,
         ],
 
         // 'users' => [

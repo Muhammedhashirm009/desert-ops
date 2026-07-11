@@ -15,6 +15,7 @@ class SalesLogItem extends Model
     protected $fillable = [
         'sales_log_id',
         'product_id',
+        'outlet_catalog_item_id',
         'quantity_sold',
         'unit_price',
         'total_revenue',
@@ -38,5 +39,10 @@ class SalesLogItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function catalogItem(): BelongsTo
+    {
+        return $this->belongsTo(OutletCatalogItem::class, 'outlet_catalog_item_id');
     }
 }

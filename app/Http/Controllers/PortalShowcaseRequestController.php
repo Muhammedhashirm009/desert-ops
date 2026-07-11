@@ -13,6 +13,15 @@ use Illuminate\Support\Facades\DB;
 
 class PortalShowcaseRequestController extends Controller
 {
+    /**
+     * Ensure the current session user is an outlet_admin.
+     */
+    private function ensureOutletAdmin()
+    {
+        if (session('portal_employee_role') !== 'outlet_admin') {
+            abort(403, 'Only outlet administrators can perform this action.');
+        }
+    }
     public function index()
     {
         $outletId = session('portal_outlet_id');
@@ -63,7 +72,7 @@ class PortalShowcaseRequestController extends Controller
             $showcaseRequest = ShowcaseRequest::create([
                 'request_number' => $requestNumber,
                 'outlet_id' => $outletId,
-                'requested_by' => $request->requested_by,
+                'requested_by' => session('portal_employee_name', $request->requested_by),
                 'requested_date' => now()->toDateString(),
                 'status' => 'pending',
                 'notes' => $request->notes,
@@ -112,6 +121,7 @@ class PortalShowcaseRequestController extends Controller
 
     public function approve(ShowcaseRequest $showcaseRequest)
     {
+        $this->ensureOutletAdmin();
         $outletId = session('portal_outlet_id');
         if ($showcaseRequest->outlet_id != $outletId) {
             abort(403, 'Unauthorized access.');
@@ -125,6 +135,7 @@ class PortalShowcaseRequestController extends Controller
 
     public function reject(ShowcaseRequest $showcaseRequest)
     {
+        $this->ensureOutletAdmin();
         $outletId = session('portal_outlet_id');
         if ($showcaseRequest->outlet_id != $outletId) {
             abort(403, 'Unauthorized access.');
@@ -138,6 +149,7 @@ class PortalShowcaseRequestController extends Controller
 
     public function release(Request $request, ShowcaseRequest $showcaseRequest)
     {
+        $this->ensureOutletAdmin();
         $outletId = session('portal_outlet_id');
         if ($showcaseRequest->outlet_id != $outletId) {
             abort(403, 'Unauthorized access.');
@@ -207,7 +219,7 @@ class PortalShowcaseRequestController extends Controller
                     'from_location' => $source,
                     'to_location' => 'showcase',
                     'quantity' => $qtyReleased,
-                    'logged_by' => auth('web')->check() ? auth('web')->user()->name : ($outlet->name . ' Staff'),
+                    'logged_by' => session('portal_employee_name', ($outlet->name . ' Staff')),
                     'reference' => $showcaseRequest->request_number,
                 ]);
             }

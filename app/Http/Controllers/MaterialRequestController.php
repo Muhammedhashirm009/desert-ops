@@ -172,7 +172,7 @@ class MaterialRequestController extends Controller
             DB::commit();
 
             // Notify Kitchen Chefs, GMs, and Admins
-            $recipients = \App\Models\User::whereIn('role', ['admin', 'gm', 'kitchen_chef'])->get();
+            $recipients = \App\Models\User::whereIn('role', ['admin', 'gm', 'laban_chef', 'baklava_chef', 'dough_chef'])->get();
             if ($recipients->isNotEmpty()) {
                 \Illuminate\Support\Facades\Notification::send($recipients, new \App\Notifications\MaterialRequestReleased($materialRequest));
             }

@@ -4,10 +4,14 @@
 @section('breadcrumb', 'Daily Sales Logs')
 
 @section('content')
+@php
+  $isOutletAdmin = session('portal_employee_role', 'outlet_admin') === 'outlet_admin';
+@endphp
+
 <div class="ph">
   <div>
     <div class="ph-title">Daily Sales Reports</div>
-    <div class="ph-sub">View and track daily sales reports logged for this outlet and commission details</div>
+    <div class="ph-sub">View and track daily sales reports logged for this outlet{{ $isOutletAdmin ? ' and commission details' : '' }}</div>
   </div>
   <div class="ph-acts">
     <a href="{{ route('portal.sales.create') }}" class="btn-pri">
@@ -17,7 +21,8 @@
   </div>
 </div>
 
-<!-- Financial Summary Strip -->
+@if($isOutletAdmin)
+<!-- Financial Summary Strip (Admin Only) -->
 <div class="sum-strip">
   <div class="sum-item">
     <div class="sum-val">₹{{ number_format($salesLogs->sum('total_revenue'), 2) }}</div>
@@ -41,6 +46,7 @@
     <div class="sum-lbl">Net Kitchen Earnings</div>
   </div>
 </div>
+@endif
 
 <div class="card">
   <div class="ch">
@@ -52,11 +58,15 @@
   <table class="tbl">
     <thead>
       <tr>
-        <th style="width: 15%;">Report Date</th>
-        <th style="width: 40%;">Items Sold</th>
+        <th style="width: {{ $isOutletAdmin ? '15%' : '20%' }};">Report Date</th>
+        <th style="width: {{ $isOutletAdmin ? '40%' : '60%' }};">Items Sold</th>
+        @if($isOutletAdmin)
         <th style="width: 15%; text-align: right;">Gross Sales</th>
         <th style="width: 15%; text-align: right;">Commission</th>
         <th style="width: 15%; text-align: right;">Net Revenue</th>
+        @else
+        <th style="width: 20%; text-align: right;">Total Qty Sold</th>
+        @endif
       </tr>
     </thead>
     <tbody>
@@ -71,11 +81,14 @@
               <li>
                 {{ $item->product->name }}: 
                 <b>{{ number_format($item->quantity_sold, 0) }} Units</b> 
+                @if($isOutletAdmin)
                 <span class="td3">@ ₹{{ number_format($item->unit_price, 2) }}</span>
+                @endif
               </li>
             @endforeach
           </ul>
         </td>
+        @if($isOutletAdmin)
         <td data-label="Gross Sales" class="mono font-semibold" style="text-align: right; font-weight: 600;">₹{{ number_format($log->total_revenue, 2) }}</td>
         <td data-label="Commission" class="mono" style="text-align: right; color: var(--purple-tx);">
           @if($log->outlet->type === 'franchise')
@@ -85,10 +98,15 @@
           @endif
         </td>
         <td data-label="Net Revenue" class="mono font-semibold" style="text-align: right; color: var(--green-tx); font-weight: 600;">₹{{ number_format($log->net_revenue, 2) }}</td>
+        @else
+        <td data-label="Total Qty" class="mono font-semibold" style="text-align: right; font-weight: 600;">
+          {{ number_format($log->items->sum('quantity_sold'), 0) }} Units
+        </td>
+        @endif
       </tr>
       @empty
       <tr>
-        <td colspan="5" class="text-center td2" style="padding: 30px;">
+        <td colspan="{{ $isOutletAdmin ? 5 : 3 }}" class="text-center td2" style="padding: 30px;">
           No sales logged yet for this outlet. <a href="{{ route('portal.sales.create') }}">Log your first sales report now</a>.
         </td>
       </tr>

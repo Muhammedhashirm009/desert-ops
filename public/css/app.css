@@ -763,7 +763,80 @@ tbody tr:hover td{background:var(--row-hov);}
   stroke: var(--red-tx);
 }
 
+/* ══ PAGE SEARCH BAR (Desktop + Mobile) ══ */
+.page-search-bar {
+  margin-bottom: 16px;
+}
+.page-search-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--div2);
+  border-radius: 10px;
+  padding: 0 14px;
+  height: 44px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.page-search-inner:focus-within {
+  border-color: var(--purple-tx);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.08);
+}
+.page-search-icon {
+  width: 16px;
+  height: 16px;
+  stroke: var(--txt3);
+  flex-shrink: 0;
+}
+.page-search-inner input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0;
+  height: 42px;
+  font-size: 14px;
+  color: var(--txt);
+  outline: none;
+}
+.page-search-inner input::placeholder {
+  color: var(--txt3);
+  font-size: 13px;
+}
+#mobile-search-clear {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--txt3);
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#mobile-search-clear:hover {
+  background: var(--div);
+  color: var(--txt2);
+}
+
 @media (max-width: 768px) {
+  /* Search bar mobile tweaks */
+  .page-search-bar {
+    margin-bottom: 12px;
+  }
+  .page-search-inner {
+    height: 40px;
+    padding: 0 12px;
+  }
+  .page-search-inner input {
+    font-size: 14px !important;
+    height: 38px !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
   /* Hide desktop sidebar */
   aside.sb {
     display: none !important;
@@ -1152,6 +1225,92 @@ tbody tr:hover td{background:var(--row-hov);}
   }
   .po-create-table td:nth-child(6)::before {
     display: none !important;
+  }
+
+  /* ── Sum Strip (Financial Summary) ── */
+  .sum-strip {
+    flex-direction: column !important;
+    gap: 0 !important;
+    border-radius: var(--radius-lg) !important;
+    overflow: hidden;
+  }
+  .sum-strip .sum-item {
+    border-right: none !important;
+    border-bottom: 1px solid var(--div) !important;
+    padding: 12px 16px !important;
+  }
+  .sum-strip .sum-item:last-child {
+    border-bottom: none !important;
+  }
+  .sum-strip .sum-val {
+    font-size: 16px !important;
+  }
+  .sum-strip .sum-lbl {
+    font-size: 11px !important;
+  }
+
+  /* ── Table cells with complex inner content ── */
+  table.tbl td[data-label="Actions"],
+  table.tbl td[data-label="Name"] {
+    padding-left: 0 !important;
+    text-align: left !important;
+  }
+  table.tbl td[data-label="Actions"]::before,
+  table.tbl td[data-label="Name"]::before {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 6px;
+  }
+  table.tbl td[data-label="Actions"] > div {
+    justify-content: flex-start !important;
+  }
+
+  /* ── Production table (outlet kitchen) mobile layout ── */
+  .prod-table {
+    display: block;
+    width: 100% !important;
+  }
+  .prod-table thead {
+    display: none;
+  }
+  .prod-table tbody, .prod-table tr, .prod-table td {
+    display: block;
+    width: 100%;
+  }
+  .prod-table tr {
+    border-bottom: 1px solid var(--div2);
+    padding: 16px 12px;
+    position: relative;
+    background: rgba(255, 255, 255, 0.5);
+  }
+  .prod-table td {
+    padding: 8px 0 !important;
+    border: none !important;
+  }
+  .prod-table td:nth-child(1)::before {
+    content: "Material";
+    display: block;
+    font-size: 11px;
+    color: var(--txt2);
+    margin-bottom: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .prod-table td:nth-child(2)::before {
+    content: "Qty to Use";
+    display: block;
+    font-size: 11px;
+    color: var(--txt2);
+    margin-bottom: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .prod-table td:nth-child(3) {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: auto !important;
   }
 }
 

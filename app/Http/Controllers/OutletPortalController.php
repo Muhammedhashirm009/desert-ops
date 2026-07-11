@@ -19,6 +19,23 @@ use Illuminate\Support\Facades\DB;
 
 class OutletPortalController extends Controller
 {
+    /**
+     * Ensure the current session user is an outlet_admin.
+     */
+    private function ensureOutletAdmin()
+    {
+        if (session('portal_employee_role') !== 'outlet_admin') {
+            abort(403, 'Only outlet administrators can perform this action.');
+        }
+    }
+
+    /**
+     * Get the current employee's display name for audit trail.
+     */
+    private function getLoggedByName(): string
+    {
+        return session('portal_employee_name', 'Outlet Staff');
+    }
     public function showLogin()
     {
         // If already logged in, redirect to dashboard
@@ -52,19 +69,58 @@ class OutletPortalController extends Controller
 
     public function logout(Request $request)
     {
+        // Logout from outlet_employee guard
+        \Illuminate\Support\Facades\Auth::guard('outlet_employee')->logout();
+        // Logout from legacy outlet guard
         \Illuminate\Support\Facades\Auth::guard('outlet')->logout();
-        session()->forget('portal_outlet_id');
+
+        // Clear all portal session data
+        session()->forget(['portal_outlet_id', 'portal_employee_id', 'portal_employee_role', 'portal_employee_name']);
         
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('portal.login')->with('success', 'Logged out of store portal.');
+        return redirect()->route('login')->with('success', 'Logged out of store portal.');
     }
 
     public function dashboard()
     {
         $outlet = Outlet::findOrFail(session('portal_outlet_id'));
-        $outlet->load(['stocks.product', 'stocks.material']);
+        $outlet->load(['stocks.product', 'stocks.material', 'stocks.catalogItem']);
+
+        // Calculate opening/closing stocks using today's stock movements
+        $today = now()->startOfDay();
+        $movementsToday = \App\Models\OutletStockMovement::where('outlet_id', $outlet->id)
+            ->where('created_at', '>=', $today)
+            ->get();
+
+        foreach ($outlet->stocks as $stock) {
+            $isProduct = (bool)$stock->product_id;
+            $itemId = $isProduct ? $stock->product_id : $stock->material_id;
+            $itemMovements = $movementsToday->filter(function($m) use ($isProduct, $itemId) {
+                return $isProduct 
+                    ? ($m->product_id === $itemId && $m->material_id === null)
+                    : ($m->material_id === $itemId && $m->product_id === null);
+            });
+
+            // Calculate additions (external additions to outlet stock)
+            $additions = $itemMovements->filter(function($m) {
+                $toIn = in_array($m->to_location, ['store', 'kitchen', 'showcase']);
+                $fromOut = !in_array($m->from_location, ['store', 'kitchen', 'showcase']);
+                return $toIn && $fromOut;
+            })->sum('quantity');
+
+            // Calculate subtractions (removals from outlet stock)
+            $subtractions = $itemMovements->filter(function($m) {
+                $fromIn = in_array($m->from_location, ['store', 'kitchen', 'showcase']);
+                $toOut = !in_array($m->to_location, ['store', 'kitchen', 'showcase']);
+                return $fromIn && $toOut;
+            })->sum('quantity');
+
+            // Opening stock = Current total - additions + subtractions
+            $stock->opening_stock = $stock->quantity - $additions + $subtractions;
+            $stock->closing_stock = $stock->quantity;
+        }
 
         // Pending dispatches in transit to this outlet
         $incomingCount = Dispatch::where('outlet_id', $outlet->id)
@@ -86,6 +142,83 @@ class OutletPortalController extends Controller
         return view('portal.dashboard', compact('outlet', 'incomingCount', 'recentSales'));
     }
 
+    public function stockReport(Request $request)
+    {
+        $outlet = Outlet::findOrFail(session('portal_outlet_id'));
+        $outlet->load(['stocks.product', 'stocks.material']);
+
+        $dateStr = $request->input('date', now()->toDateString());
+        $targetDate = \Carbon\Carbon::parse($dateStr);
+        $targetStart = $targetDate->copy()->startOfDay();
+        $targetEnd = $targetDate->copy()->endOfDay();
+
+        $movementsAfter = \App\Models\OutletStockMovement::where('outlet_id', $outlet->id)
+            ->where('created_at', '>', $targetEnd)
+            ->get();
+
+        $movementsOn = \App\Models\OutletStockMovement::where('outlet_id', $outlet->id)
+            ->whereBetween('created_at', [$targetStart, $targetEnd])
+            ->get();
+
+        $reportData = [];
+
+        foreach ($outlet->stocks as $stock) {
+            $isProduct = (bool)$stock->product_id;
+            $itemId = $isProduct ? $stock->product_id : $stock->material_id;
+
+            // Filter movements after selected date
+            $itemMovementsAfter = $movementsAfter->filter(function($m) use ($isProduct, $itemId) {
+                return $isProduct 
+                    ? ($m->product_id === $itemId && $m->material_id === null)
+                    : ($m->material_id === $itemId && $m->product_id === null);
+            });
+
+            $additionsAfter = $itemMovementsAfter->filter(function($m) {
+                return in_array($m->to_location, ['store', 'kitchen', 'showcase']) && !in_array($m->from_location, ['store', 'kitchen', 'showcase']);
+            })->sum('quantity');
+
+            $subtractionsAfter = $itemMovementsAfter->filter(function($m) {
+                return in_array($m->from_location, ['store', 'kitchen', 'showcase']) && !in_array($m->to_location, ['store', 'kitchen', 'showcase']);
+            })->sum('quantity');
+
+            // Closing stock on target date
+            $closingStock = $stock->quantity - $additionsAfter + $subtractionsAfter;
+
+            // Filter movements on selected date
+            $itemMovementsOn = $movementsOn->filter(function($m) use ($isProduct, $itemId) {
+                return $isProduct 
+                    ? ($m->product_id === $itemId && $m->material_id === null)
+                    : ($m->material_id === $itemId && $m->product_id === null);
+            });
+
+            $additionsOn = $itemMovementsOn->filter(function($m) {
+                return in_array($m->to_location, ['store', 'kitchen', 'showcase']) && !in_array($m->from_location, ['store', 'kitchen', 'showcase']);
+            })->sum('quantity');
+
+            $subtractionsOn = $itemMovementsOn->filter(function($m) {
+                return in_array($m->from_location, ['store', 'kitchen', 'showcase']) && !in_array($m->to_location, ['store', 'kitchen', 'showcase']);
+            })->sum('quantity');
+
+            // Opening stock on target date
+            $openingStock = $closingStock - $additionsOn + $subtractionsOn;
+
+            $reportData[] = (object)[
+                'sku' => $isProduct ? $stock->product->sku : $stock->material->sku,
+                'name' => $isProduct ? $stock->product->name : $stock->material->name,
+                'category' => $isProduct ? 'Product' : 'Packaging',
+                'unit' => $isProduct ? 'Units' : 'Pieces',
+                'opening_stock' => $openingStock,
+                'additions' => $additionsOn,
+                'subtractions' => $subtractionsOn,
+                'closing_stock' => $closingStock,
+            ];
+        }
+
+        $isOutletAdmin = session('portal_employee_role', 'outlet_admin') === 'outlet_admin';
+
+        return view('portal.stock_report', compact('outlet', 'reportData', 'dateStr', 'isOutletAdmin'));
+    }
+
     public function dispatches()
     {
         $outletId = session('portal_outlet_id');
@@ -99,6 +232,7 @@ class OutletPortalController extends Controller
 
     public function receiveDispatch(Request $request, Dispatch $dispatch)
     {
+        $this->ensureOutletAdmin();
         $outletId = session('portal_outlet_id');
         $outlet = Outlet::findOrFail($outletId);
         
@@ -116,6 +250,12 @@ class OutletPortalController extends Controller
             DB::beginTransaction();
 
             // 1. Increment outlet stocks and log movements
+            // Load product type assignments for this outlet
+            $productAssignments = \Illuminate\Support\Facades\DB::table('outlet_product')
+                ->where('outlet_id', $outletId)
+                ->whereNotNull('product_id')
+                ->pluck('type', 'product_id');
+
             foreach ($dispatch->items as $item) {
                 $search = ['outlet_id' => $outletId];
                 if ($item->product_id) {
@@ -136,7 +276,18 @@ class OutletPortalController extends Controller
                     ]
                 );
 
-                $outletStock->increment('store_quantity', $item->quantity);
+                // Determine destination based on product type classification
+                $destinationField = 'store_quantity';
+                $destinationLabel = 'store';
+                if ($item->product_id) {
+                    $productType = $productAssignments[$item->product_id] ?? 'pre_cooked';
+                    if ($productType === 'half_prepared') {
+                        $destinationField = 'kitchen_quantity';
+                        $destinationLabel = 'kitchen';
+                    }
+                }
+
+                $outletStock->increment($destinationField, $item->quantity);
                 $outletStock->increment('quantity', $item->quantity);
 
                 // Log movement
@@ -145,9 +296,9 @@ class OutletPortalController extends Controller
                     'product_id' => $item->product_id,
                     'material_id' => $item->material_id,
                     'from_location' => 'external',
-                    'to_location' => 'store',
+                    'to_location' => $destinationLabel,
                     'quantity' => $item->quantity,
-                    'logged_by' => $outlet->name . ' Staff',
+                    'logged_by' => $this->getLoggedByName(),
                     'reference' => $dispatch->dispatch_number,
                 ]);
             }
@@ -158,7 +309,7 @@ class OutletPortalController extends Controller
             DB::commit();
 
             // Send notification to authorized roles (Admins, GMs, and Kitchen Chefs)
-            $recipients = \App\Models\User::whereIn('role', ['admin', 'gm', 'kitchen_chef'])->get();
+            $recipients = \App\Models\User::whereIn('role', ['admin', 'gm', 'laban_chef', 'baklava_chef', 'dough_chef'])->get();
             \Illuminate\Support\Facades\Notification::send($recipients, new \App\Notifications\ShipmentReceived($dispatch));
 
             return redirect()->route('portal.dispatches')
@@ -204,7 +355,14 @@ class OutletPortalController extends Controller
         $stocks = OutletStock::where('outlet_id', $outletId)
             ->pluck('showcase_quantity', 'product_id');
 
-        return view('portal.sales_create', compact('outlet', 'products', 'stocks'));
+        // Catalog items with showcase stock available for sale
+        $catalogStocks = OutletStock::where('outlet_id', $outletId)
+            ->whereNotNull('outlet_catalog_item_id')
+            ->where('showcase_quantity', '>', 0)
+            ->with('catalogItem')
+            ->get();
+
+        return view('portal.sales_create', compact('outlet', 'products', 'stocks', 'catalogStocks'));
     }
 
     public function salesStore(Request $request)
@@ -215,7 +373,8 @@ class OutletPortalController extends Controller
         $request->validate([
             'log_date' => 'required|date|before_or_equal:today',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => 'nullable|exists:products,id',
+            'items.*.outlet_catalog_item_id' => 'nullable|exists:outlet_catalog_items,id',
             'items.*.quantity_sold' => 'required|numeric|min:1',
         ]);
 
@@ -225,21 +384,37 @@ class OutletPortalController extends Controller
             $salesLog = SalesLog::create([
                 'outlet_id' => $outletId,
                 'log_date' => $request->log_date,
+                'logged_by_employee_id' => session('portal_employee_id'),
             ]);
 
             foreach ($request->items as $item) {
-                $product = Product::findOrFail($item['product_id']);
-                
-                // 1. Stock Check
-                $outletStock = OutletStock::where('outlet_id', $outletId)
-                    ->where('product_id', $product->id)
-                    ->first();
-                
+                $isCatalogItem = !empty($item['outlet_catalog_item_id']);
+
+                if ($isCatalogItem) {
+                    $catalogItem = \App\Models\OutletCatalogItem::findOrFail($item['outlet_catalog_item_id']);
+                    $itemName = $catalogItem->name;
+                    $unitPrice = (float) $catalogItem->retail_price;
+
+                    // Stock check for catalog item
+                    $outletStock = OutletStock::where('outlet_id', $outletId)
+                        ->where('outlet_catalog_item_id', $catalogItem->id)
+                        ->first();
+                } else {
+                    $product = Product::findOrFail($item['product_id']);
+                    $itemName = $product->name;
+                    $unitPrice = (float) $product->retail_price;
+
+                    // Stock check for product
+                    $outletStock = OutletStock::where('outlet_id', $outletId)
+                        ->where('product_id', $product->id)
+                        ->first();
+                }
+
                 $availableQty = $outletStock ? (float)$outletStock->showcase_quantity : 0.00;
                 $quantitySold = (float)$item['quantity_sold'];
 
                 if ($quantitySold > $availableQty) {
-                    throw new \Exception("Insufficient stock for product '{$product->name}'. Available at showcase: {$availableQty} units, Sold: {$quantitySold} units.");
+                    throw new \Exception("Insufficient stock for '{$itemName}'. Available at showcase: {$availableQty} units, Sold: {$quantitySold} units.");
                 }
 
                 // 2. Decrement outlet stock
@@ -249,16 +424,16 @@ class OutletPortalController extends Controller
                 // Log movement
                 \App\Models\OutletStockMovement::create([
                     'outlet_id' => $outletId,
-                    'product_id' => $product->id,
+                    'product_id' => $isCatalogItem ? null : $product->id,
+                    'outlet_catalog_item_id' => $isCatalogItem ? $catalogItem->id : null,
                     'from_location' => 'showcase',
                     'to_location' => 'consumed',
                     'quantity' => $quantitySold,
-                    'logged_by' => 'Customer Sale',
+                    'logged_by' => $this->getLoggedByName(),
                     'reference' => 'Sales Log #' . $salesLog->id,
                 ]);
 
                 // 3. Financial calculations
-                $unitPrice = $product->retail_price;
                 $totalRevenue = $quantitySold * $unitPrice;
                 
                 $commissionAmount = 0.00;
@@ -271,7 +446,8 @@ class OutletPortalController extends Controller
                 // 4. Save item
                 SalesLogItem::create([
                     'sales_log_id' => $salesLog->id,
-                    'product_id' => $product->id,
+                    'product_id' => $isCatalogItem ? null : $product->id,
+                    'outlet_catalog_item_id' => $isCatalogItem ? $catalogItem->id : null,
                     'quantity_sold' => $quantitySold,
                     'unit_price' => $unitPrice,
                     'total_revenue' => $totalRevenue,
@@ -357,6 +533,7 @@ class OutletPortalController extends Controller
 
     public function requestsCreate()
     {
+        $this->ensureOutletAdmin();
         $outletId = session('portal_outlet_id');
         $outlet = Outlet::findOrFail($outletId);
 
@@ -384,6 +561,7 @@ class OutletPortalController extends Controller
 
     public function requestsStore(Request $request)
     {
+        $this->ensureOutletAdmin();
         $outletId = session('portal_outlet_id');
         $outlet = Outlet::findOrFail($outletId);
 
@@ -437,7 +615,7 @@ class OutletPortalController extends Controller
             DB::commit();
 
             // Trigger notification to authorized roles (Admins, GMs, Kitchen Chefs)
-            $recipients = \App\Models\User::whereIn('role', ['admin', 'gm', 'kitchen_chef'])->get();
+            $recipients = \App\Models\User::whereIn('role', ['admin', 'gm', 'laban_chef', 'baklava_chef', 'dough_chef'])->get();
             if ($recipients->isNotEmpty()) {
                 \Illuminate\Support\Facades\Notification::send($recipients, new \App\Notifications\ProductRequestReceived($dispatch));
             }
@@ -453,6 +631,7 @@ class OutletPortalController extends Controller
 
     public function moveStock(Request $request)
     {
+        $this->ensureOutletAdmin();
         $outletId = session('portal_outlet_id');
         $outlet = Outlet::findOrFail($outletId);
         
@@ -502,7 +681,7 @@ class OutletPortalController extends Controller
                 'from_location' => $request->from_location,
                 'to_location' => $request->to_location,
                 'quantity' => $qtyToMove,
-                'logged_by' => $outlet->name . ' Staff',
+                'logged_by' => $this->getLoggedByName(),
                 'reference' => 'Manual Move',
             ]);
 

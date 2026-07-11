@@ -16,6 +16,7 @@ class OutletStock extends Model
         'outlet_id',
         'product_id',
         'material_id',
+        'outlet_catalog_item_id',
         'quantity',
         'store_quantity',
         'kitchen_quantity',
@@ -42,5 +43,10 @@ class OutletStock extends Model
     public function material(): BelongsTo
     {
         return $this->belongsTo(Material::class);
+    }
+
+    public function catalogItem(): BelongsTo
+    {
+        return $this->belongsTo(OutletCatalogItem::class, 'outlet_catalog_item_id');
     }
 }

@@ -47,8 +47,8 @@
         <tbody>
           @forelse($outlet->stocks as $stock)
           <tr>
-            <td data-label="SKU" class="mono">{{ $stock->product ? $stock->product->sku : ($stock->material ? $stock->material->sku : 'N/A') }}</td>
-            <td data-label="Product" style="font-weight: 600;">{{ $stock->product ? $stock->product->name : ($stock->material ? $stock->material->name : 'Unknown') }}</td>
+            <td data-label="SKU" class="mono">{{ $stock->product ? $stock->product->sku : ($stock->material ? $stock->material->sku : ($stock->catalogItem ? $stock->catalogItem->sku : 'N/A')) }}</td>
+            <td data-label="Product" style="font-weight: 600;">{{ $stock->product ? $stock->product->name : ($stock->material ? $stock->material->name : ($stock->catalogItem ? $stock->catalogItem->name : 'Unknown')) }}</td>
             <td data-label="Store Stock" class="mono" style="text-align: right;">
               {{ number_format($stock->store_quantity, 0) }}
             </td>
@@ -109,17 +109,27 @@
             </div>
             <div class="omd-assign-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px;">
               @foreach($allProducts as $product)
-              <label class="omd-assign-item" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.15s ease; font-size: 13px;"
+              @php
+                $isAssigned = $outlet->assignedProducts->contains('id', $product->id);
+                $currentType = $isAssigned ? ($outlet->assignedProducts->find($product->id)->pivot->type ?? 'pre_cooked') : 'pre_cooked';
+              @endphp
+              <label class="omd-assign-item" style="display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.15s ease; font-size: 13px; flex-direction: column;"
                      onmouseover="this.style.borderColor='var(--btn)'; this.style.background='var(--bg2)'"
-                     onmouseout="if(!this.querySelector('input').checked){this.style.borderColor='var(--border)'; this.style.background=''}">
-                <input type="checkbox" name="product_ids[]" value="{{ $product->id }}"
-                       {{ $outlet->assignedProducts->contains('id', $product->id) ? 'checked' : '' }}
-                       style="width: 16px; height: 16px; accent-color: var(--btn);"
-                       onchange="var l=this.closest('.omd-assign-item'); if(this.checked){l.style.borderColor='var(--btn)';l.style.background='var(--bg2)'}else{l.style.borderColor='var(--border)';l.style.background=''}">
-                <div style="flex:1; min-width:0;">
-                  <div style="font-weight: 600; color: var(--txt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $product->name }}</div>
-                  <div style="font-size: 11px; color: var(--txt3); font-family: 'JetBrains Mono', monospace;">{{ $product->sku }} · ₹{{ number_format($product->retail_price, 2) }}</div>
+                     onmouseout="if(!this.querySelector('input[type=checkbox]').checked){this.style.borderColor='var(--border)'; this.style.background=''}">
+                <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                  <input type="checkbox" name="product_ids[]" value="{{ $product->id }}"
+                         {{ $isAssigned ? 'checked' : '' }}
+                         style="width: 16px; height: 16px; accent-color: var(--btn);"
+                         onchange="var l=this.closest('.omd-assign-item'); var s=l.querySelector('.type-select'); if(this.checked){l.style.borderColor='var(--btn)';l.style.background='var(--bg2)';if(s)s.style.display='block'}else{l.style.borderColor='var(--border)';l.style.background='';if(s)s.style.display='none'}">
+                  <div style="flex:1; min-width:0;">
+                    <div style="font-weight: 600; color: var(--txt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $product->name }}</div>
+                    <div style="font-size: 11px; color: var(--txt3); font-family: 'JetBrains Mono', monospace;">{{ $product->sku }} · ₹{{ number_format($product->retail_price, 2) }}</div>
+                  </div>
                 </div>
+                <select name="product_types[{{ $product->id }}]" class="type-select" style="display: {{ $isAssigned ? 'block' : 'none' }}; margin-top: 6px; width: 100%; padding: 4px 8px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--txt);">
+                  <option value="pre_cooked" {{ $currentType === 'pre_cooked' ? 'selected' : '' }}>🟢 Pre-cooked (Ready to sell)</option>
+                  <option value="half_prepared" {{ $currentType === 'half_prepared' ? 'selected' : '' }}>🟡 Half-prepared (Needs cooking)</option>
+                </select>
               </label>
               @endforeach
             </div>
@@ -149,6 +159,34 @@
                 <div style="flex:1; min-width:0;">
                   <div style="font-weight: 600; color: var(--txt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $material->name }}</div>
                   <div style="font-size: 11px; color: var(--txt3); font-family: 'JetBrains Mono', monospace;">{{ $material->sku }}@if($material->retail_price) · ₹{{ number_format($material->retail_price, 2) }}@endif</div>
+                </div>
+              </label>
+              @endforeach
+            </div>
+          </div>
+          @endif
+
+          @if(isset($allCatalogItems) && $allCatalogItems->count() > 0)
+          <div style="border-top: 1px solid var(--div); padding-top: 16px; margin-top: 16px;">
+            <div style="font-weight: 600; font-size: 13px; color: var(--txt); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px; height:14px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              Outlet Catalog Items
+            </div>
+            <div style="font-size: 12px; color: var(--txt3); margin-bottom: 10px;">
+              Select which catalog items (recipes) this outlet can produce in their kitchen.
+            </div>
+            <div class="omd-assign-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px;">
+              @foreach($allCatalogItems as $catItem)
+              <label class="omd-assign-item" style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.15s ease; font-size: 13px;"
+                     onmouseover="this.style.borderColor='var(--btn)'; this.style.background='var(--bg2)'"
+                     onmouseout="if(!this.querySelector('input').checked){this.style.borderColor='var(--border)'; this.style.background=''}">
+                <input type="checkbox" name="catalog_item_ids[]" value="{{ $catItem->id }}"
+                       {{ $outlet->assignedCatalogItems->contains('id', $catItem->id) ? 'checked' : '' }}
+                       style="width: 16px; height: 16px; accent-color: var(--btn);"
+                       onchange="var l=this.closest('.omd-assign-item'); if(this.checked){l.style.borderColor='var(--btn)';l.style.background='var(--bg2)'}else{l.style.borderColor='var(--border)';l.style.background=''}">
+                <div style="flex:1; min-width:0;">
+                  <div style="font-weight: 600; color: var(--txt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $catItem->name }}</div>
+                  <div style="font-size: 11px; color: var(--txt3); font-family: 'JetBrains Mono', monospace;">{{ $catItem->sku }} · ₹{{ number_format($catItem->retail_price, 2) }}</div>
                 </div>
               </label>
               @endforeach
@@ -221,6 +259,12 @@
             <div style="font-size: 22px; font-weight: 700; color: var(--purple-tx);">{{ $outlet->assignedMaterials->count() }}</div>
             <div style="font-size: 11px; color: var(--txt3); font-weight: 500;">Packaging</div>
           </div>
+          @if(isset($allCatalogItems) && $allCatalogItems->count() > 0)
+          <div style="flex:1; text-align:center; padding: 12px; background: var(--bg2); border-radius: 8px;">
+            <div style="font-size: 22px; font-weight: 700; color: var(--green-tx);">{{ $outlet->assignedCatalogItems->count() }}</div>
+            <div style="font-size: 11px; color: var(--txt3); font-weight: 500;">Catalog</div>
+          </div>
+          @endif
         </div>
       </div>
     </div>

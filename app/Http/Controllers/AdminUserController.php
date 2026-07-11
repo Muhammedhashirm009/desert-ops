@@ -27,7 +27,9 @@ class AdminUserController extends Controller
             'admin' => 'Admin (Full Access)',
             'gm' => 'General Manager (No Finance)',
             'store_manager' => 'Store Manager (Procurement)',
-            'kitchen_chef' => 'Kitchen Chef (Production)',
+            'laban_chef' => 'Laban Chef (Production)',
+            'baklava_chef' => 'Baklava Chef (Production)',
+            'dough_chef' => 'Dough Chef (Production)',
             'accountant' => 'Accountant (Accounting Only)',
         ];
         return view('admin.users.create', compact('roles'));
@@ -42,7 +44,7 @@ class AdminUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:6'],
-            'role' => ['required', Rule::in(['admin', 'accountant', 'gm', 'kitchen_chef', 'store_manager'])],
+            'role' => ['required', Rule::in(['admin', 'accountant', 'gm', 'laban_chef', 'baklava_chef', 'dough_chef', 'store_manager'])],
         ]);
 
         User::create([
@@ -64,7 +66,9 @@ class AdminUserController extends Controller
             'admin' => 'Admin (Full Access)',
             'gm' => 'General Manager (No Finance)',
             'store_manager' => 'Store Manager (Procurement)',
-            'kitchen_chef' => 'Kitchen Chef (Production)',
+            'laban_chef' => 'Laban Chef (Production)',
+            'baklava_chef' => 'Baklava Chef (Production)',
+            'dough_chef' => 'Dough Chef (Production)',
             'accountant' => 'Accountant (Accounting Only)',
         ];
         return view('admin.users.edit', compact('user', 'roles'));
@@ -79,7 +83,7 @@ class AdminUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => ['nullable', 'string', 'min:6'],
-            'role' => ['required', Rule::in(['admin', 'accountant', 'gm', 'kitchen_chef', 'store_manager'])],
+            'role' => ['required', Rule::in(['admin', 'accountant', 'gm', 'laban_chef', 'baklava_chef', 'dough_chef', 'store_manager'])],
         ]);
 
         $user->name = $data['name'];

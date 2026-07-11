@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Material;
 use App\Models\Outlet;
+use App\Models\OutletCatalogItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -47,16 +48,17 @@ class OutletController extends Controller
 
     public function show(Outlet $outlet)
     {
-        $outlet->load(['stocks.product', 'stocks.material', 'dispatches' => function($q) {
+        $outlet->load(['stocks.product', 'stocks.material', 'stocks.catalogItem', 'dispatches' => function($q) {
             $q->orderBy('created_at', 'desc')->take(10);
         }, 'salesLogs' => function($q) {
             $q->orderBy('created_at', 'desc')->take(10);
-        }, 'assignedProducts', 'assignedMaterials']);
+        }, 'assignedProducts', 'assignedMaterials', 'assignedCatalogItems']);
 
         $allProducts = Product::orderBy('name', 'asc')->get();
         $allPackagingMaterials = Material::where('category', 'packaging')->orderBy('name', 'asc')->get();
+        $allCatalogItems = OutletCatalogItem::where('is_active', true)->orderBy('name', 'asc')->get();
 
-        return view('outlets.show', compact('outlet', 'allProducts', 'allPackagingMaterials'));
+        return view('outlets.show', compact('outlet', 'allProducts', 'allPackagingMaterials', 'allCatalogItems'));
     }
 
     public function miniDashboard(Outlet $outlet)
@@ -154,19 +156,34 @@ class OutletController extends Controller
     }
 
     /**
-     * Update product and material assignments for an outlet.
+     * Update product, material, and catalog item assignments for an outlet.
      */
     public function updateAssignments(Request $request, Outlet $outlet)
     {
         $validated = $request->validate([
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'exists:products,id',
+            'product_types' => 'nullable|array',
+            'product_types.*' => 'in:pre_cooked,half_prepared',
             'material_ids' => 'nullable|array',
             'material_ids.*' => 'exists:materials,id',
+            'catalog_item_ids' => 'nullable|array',
+            'catalog_item_ids.*' => 'exists:outlet_catalog_items,id',
         ]);
 
-        $outlet->assignedProducts()->sync($validated['product_ids'] ?? []);
+        // Sync products with type pivot data
+        $productSync = [];
+        $productIds = $validated['product_ids'] ?? [];
+        $productTypes = $validated['product_types'] ?? [];
+        foreach ($productIds as $productId) {
+            $productSync[$productId] = [
+                'type' => $productTypes[$productId] ?? 'pre_cooked',
+            ];
+        }
+        $outlet->assignedProducts()->sync($productSync);
+
         $outlet->assignedMaterials()->sync($validated['material_ids'] ?? []);
+        $outlet->assignedCatalogItems()->sync($validated['catalog_item_ids'] ?? []);
 
         return redirect()->route('outlets.show', $outlet->id)->with('success', 'Product assignments updated successfully.');
     }

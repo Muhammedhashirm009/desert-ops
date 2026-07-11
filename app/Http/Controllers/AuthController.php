@@ -28,6 +28,11 @@ class AuthController extends Controller
             return redirect()->route('accounting.dashboard');
         }
 
+        // If already logged into an outlet employee session, go to outlet dashboard
+        if (Auth::guard('outlet_employee')->check()) {
+            return redirect()->route('portal.dashboard');
+        }
+
         return view('auth.login');
     }
 
@@ -59,7 +64,30 @@ class AuthController extends Controller
                 ->with('success', 'Logged in to Accountant Portal.');
         }
 
-        // 3. Try to login as Outlet (using outlet guard)
+        // 3. Try to login as Outlet Employee (using outlet_employee guard)
+        if (Auth::guard('outlet_employee')->attempt($credentials, $request->boolean('remember'))) {
+            $employee = Auth::guard('outlet_employee')->user();
+
+            // Block inactive employees
+            if (!$employee->is_active) {
+                Auth::guard('outlet_employee')->logout();
+                return back()->withErrors([
+                    'email' => 'Your account has been deactivated. Please contact your outlet administrator.',
+                ])->onlyInput('email');
+            }
+
+            $request->session()->regenerate();
+            session(['portal_outlet_id' => $employee->outlet_id]);
+            session(['portal_employee_id' => $employee->id]);
+            session(['portal_employee_role' => $employee->role]);
+            session(['portal_employee_name' => $employee->name]);
+
+            $outlet = $employee->outlet;
+            return redirect()->intended(route('portal.dashboard'))
+                ->with('success', "Logged in as {$employee->name} to {$outlet->name} portal.");
+        }
+
+        // 4. Try to login as Outlet (legacy, using outlet guard)
         if (Auth::guard('outlet')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             $outlet = Auth::guard('outlet')->user();

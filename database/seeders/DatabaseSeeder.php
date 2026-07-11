@@ -36,10 +36,24 @@ class DatabaseSeeder extends Seeder
         ]);
 
         User::factory()->create([
-            'name' => 'Kitchen Chef',
-            'email' => 'chef@dessertops.com',
+            'name' => 'Laban Chef',
+            'email' => 'laban_chef@dessertops.com',
             'password' => bcrypt('password'),
-            'role' => 'kitchen_chef',
+            'role' => 'laban_chef',
+        ]);
+
+        User::factory()->create([
+            'name' => 'Baklava Chef',
+            'email' => 'baklava_chef@dessertops.com',
+            'password' => bcrypt('password'),
+            'role' => 'baklava_chef',
+        ]);
+
+        User::factory()->create([
+            'name' => 'Dough Chef',
+            'email' => 'dough_chef@dessertops.com',
+            'password' => bcrypt('password'),
+            'role' => 'dough_chef',
         ]);
 
         User::factory()->create([

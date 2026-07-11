@@ -154,6 +154,12 @@ class DispatchController extends Controller
             DB::beginTransaction();
 
             // 1. Increment target outlet stocks
+            // Load product type assignments for this outlet
+            $productAssignments = \Illuminate\Support\Facades\DB::table('outlet_product')
+                ->where('outlet_id', $dispatch->outlet_id)
+                ->whereNotNull('product_id')
+                ->pluck('type', 'product_id');
+
             foreach ($dispatch->items as $item) {
                 $search = ['outlet_id' => $dispatch->outlet_id];
                 if ($item->product_id) {
@@ -174,7 +180,18 @@ class DispatchController extends Controller
                     ]
                 );
 
-                $outletStock->increment('store_quantity', $item->quantity);
+                // Determine destination based on product type classification
+                $destinationField = 'store_quantity';
+                $destinationLabel = 'store';
+                if ($item->product_id) {
+                    $productType = $productAssignments[$item->product_id] ?? 'pre_cooked';
+                    if ($productType === 'half_prepared') {
+                        $destinationField = 'kitchen_quantity';
+                        $destinationLabel = 'kitchen';
+                    }
+                }
+
+                $outletStock->increment($destinationField, $item->quantity);
                 $outletStock->increment('quantity', $item->quantity);
 
                 // Log movement
@@ -183,7 +200,7 @@ class DispatchController extends Controller
                     'product_id' => $item->product_id,
                     'material_id' => $item->material_id,
                     'from_location' => 'external',
-                    'to_location' => 'store',
+                    'to_location' => $destinationLabel,
                     'quantity' => $item->quantity,
                     'logged_by' => 'Central Kitchen Dispatch',
                     'reference' => $dispatch->dispatch_number,

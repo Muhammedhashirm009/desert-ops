@@ -14,6 +14,7 @@ use App\Http\Controllers\OutletController;
 use App\Http\Controllers\DispatchController;
 use App\Http\Controllers\SalesLogController;
 use App\Http\Controllers\OutletPortalController;
+use App\Http\Controllers\OutletCatalogController;
 use App\Http\Controllers\AccountingController;
 
 // ══ Unified Authentication Routes ══
@@ -61,12 +62,12 @@ Route::middleware(['auth'])->group(function () {
     // Raw materials full access for store manager/admin/gm
     Route::resource('materials', MaterialController::class)->except(['index', 'show'])->middleware('role:admin,gm,store_manager');
     // Raw materials read-only for kitchen chef
-    Route::resource('materials', MaterialController::class)->only(['index', 'show'])->middleware('role:admin,gm,store_manager,kitchen_chef');
+    Route::resource('materials', MaterialController::class)->only(['index', 'show'])->middleware('role:admin,gm,store_manager,laban_chef,baklava_chef,dough_chef');
 
 
     // 4. Material Requests
     // Request creation and viewing for kitchen chef, store manager, GM, Admin
-    Route::middleware(['role:admin,gm,kitchen_chef,store_manager'])->group(function () {
+    Route::middleware(['role:admin,gm,laban_chef,baklava_chef,dough_chef,store_manager'])->group(function () {
         Route::resource('material-requests', MaterialRequestController::class)->except(['destroy']);
     });
     // Request approvals/releases only for store manager, GM, Admin
@@ -77,9 +78,12 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // 5. Central Kitchen (Production, Products, Dispatches)
-    Route::middleware(['role:admin,gm,kitchen_chef'])->group(function () {
+    Route::middleware(['role:admin,gm,laban_chef,baklava_chef,dough_chef'])->group(function () {
         Route::get('kitchen/stocks', [MaterialController::class, 'kitchenStock'])->name('kitchen.stocks');
+        Route::get('kitchen/stock-report', [MaterialController::class, 'kitchenStockReport'])->name('kitchen.stock-report');
         Route::resource('products', ProductController::class);
+        Route::resource('outlet-catalog', OutletCatalogController::class);
+        Route::get('api/outlet-catalog/{outlet_catalog}/ingredients', [OutletCatalogController::class, 'ingredients'])->name('api.outlet-catalog.ingredients');
         Route::resource('production-runs', ProductionRunController::class);
         Route::post('production-runs/{production_run}/complete', [ProductionRunController::class, 'complete'])->name('production-runs.complete');
         Route::get('outlet-orders', [DispatchController::class, 'outletOrders'])->name('dispatches.orders');
@@ -166,9 +170,31 @@ Route::middleware(['portal.outlet'])->group(function () {
     Route::post('portal/showcase-requests/{showcaseRequest}/reject', [\App\Http\Controllers\PortalShowcaseRequestController::class, 'reject'])->name('portal.showcase-requests.reject');
     Route::post('portal/showcase-requests/{showcaseRequest}/release', [\App\Http\Controllers\PortalShowcaseRequestController::class, 'release'])->name('portal.showcase-requests.release');
 
+    // Outlet Employee Management (Admin only — enforced in controller)
+    Route::get('portal/employees', [\App\Http\Controllers\OutletEmployeeController::class, 'index'])->name('portal.employees.index');
+    Route::get('portal/employees/create', [\App\Http\Controllers\OutletEmployeeController::class, 'create'])->name('portal.employees.create');
+    Route::post('portal/employees', [\App\Http\Controllers\OutletEmployeeController::class, 'store'])->name('portal.employees.store');
+    Route::get('portal/employees/{employee}/edit', [\App\Http\Controllers\OutletEmployeeController::class, 'edit'])->name('portal.employees.edit');
+    Route::put('portal/employees/{employee}', [\App\Http\Controllers\OutletEmployeeController::class, 'update'])->name('portal.employees.update');
+    Route::delete('portal/employees/{employee}', [\App\Http\Controllers\OutletEmployeeController::class, 'destroy'])->name('portal.employees.destroy');
+
+    // Outlet Kitchen Production (Admin creates/completes, Salesperson can view)
+    Route::get('portal/production', [\App\Http\Controllers\OutletProductionController::class, 'index'])->name('portal.production.index');
+    Route::get('portal/production/create', [\App\Http\Controllers\OutletProductionController::class, 'create'])->name('portal.production.create');
+    Route::post('portal/production', [\App\Http\Controllers\OutletProductionController::class, 'store'])->name('portal.production.store');
+    Route::get('portal/production/{run}', [\App\Http\Controllers\OutletProductionController::class, 'show'])->name('portal.production.show');
+    Route::post('portal/production/{run}/complete', [\App\Http\Controllers\OutletProductionController::class, 'complete'])->name('portal.production.complete');
+    Route::delete('portal/production/{run}', [\App\Http\Controllers\OutletProductionController::class, 'destroy'])->name('portal.production.destroy');
+
+    // Outlet Stock Report
+    Route::get('portal/stock-report', [\App\Http\Controllers\OutletPortalController::class, 'stockReport'])->name('portal.stock-report');
+
     // Portal Live Notification API routes
     Route::get('portal/api/notifications', function() {
         $outlet = auth('outlet')->user();
+        if (!$outlet && session('portal_outlet_id')) {
+            $outlet = \App\Models\Outlet::find(session('portal_outlet_id'));
+        }
         if (!$outlet) {
             return response()->json(['count' => 0, 'notifications' => []]);
         }
@@ -186,6 +212,9 @@ Route::middleware(['portal.outlet'])->group(function () {
 
     Route::post('portal/api/notifications/{id}/read', function($id) {
         $outlet = auth('outlet')->user();
+        if (!$outlet && session('portal_outlet_id')) {
+            $outlet = \App\Models\Outlet::find(session('portal_outlet_id'));
+        }
         if ($outlet) {
             $outlet->notifications()->findOrFail($id)->markAsRead();
         }
@@ -195,6 +224,9 @@ Route::middleware(['portal.outlet'])->group(function () {
     // Portal Data Pulse API — for live page refresh
     Route::get('portal/api/data-pulse', function() {
         $outlet = auth('outlet')->user();
+        if (!$outlet && session('portal_outlet_id')) {
+            $outlet = \App\Models\Outlet::find(session('portal_outlet_id'));
+        }
         $pulse = collect([
             App\Models\Dispatch::where('outlet_id', $outlet ? $outlet->id : 0)->max('updated_at'),
             App\Models\OutletStock::where('outlet_id', $outlet ? $outlet->id : 0)->max('updated_at'),

@@ -5,7 +5,7 @@
 
 @section('content')
 @php
-  $isManagerOrChef = auth('web')->check() && in_array(auth('web')->user()->role, ['admin', 'gm', 'kitchen_chef', 'store_manager']);
+  $isOutletAdmin = session('portal_employee_role', 'outlet_admin') === 'outlet_admin';
 @endphp
 
 <div class="ph">
@@ -82,8 +82,8 @@
       </div>
     </div>
 
-    <!-- Manager/Chef Release Form (Visible only when status is 'approved' for managers/chefs) -->
-    @if($showcaseRequest->status === 'approved' && $isManagerOrChef)
+    <!-- Admin Release Form (Visible only when status is 'approved' for outlet admins) -->
+    @if($showcaseRequest->status === 'approved' && $isOutletAdmin)
     <div class="card" style="border: 1px solid var(--purple-tx);">
       <div class="ch" style="background: rgba(139, 92, 246, 0.05);">
         <div class="ch-ic" style="background: var(--purple-lt);">
@@ -115,19 +115,19 @@
                   $kitchenQty = $stockRecord ? (float)$stockRecord->kitchen_quantity : 0.00;
                 @endphp
                 <tr>
-                  <td>
+                  <td data-label="Product">
                     <div style="font-weight: 500;">{{ $item->product->name }}</div>
                   </td>
-                  <td class="mono" style="text-align: right;">
+                  <td data-label="Requested" class="mono" style="text-align: right;">
                     {{ number_format($item->quantity_requested, 2) }}
                   </td>
-                  <td>
+                  <td data-label="Release Source">
                     <select name="items[{{ $item->id }}][release_source]" class="form-input" required style="width: 100%; padding: 4px 8px; font-size: 12.5px;">
                       <option value="store" {{ $storeQty >= $item->quantity_requested ? 'selected' : '' }}>Store Stock (Avail: {{ number_format($storeQty, 1) }})</option>
                       <option value="kitchen" {{ $storeQty < $item->quantity_requested && $kitchenQty >= $item->quantity_requested ? 'selected' : '' }}>Kitchen Stock (Avail: {{ number_format($kitchenQty, 1) }})</option>
                     </select>
                   </td>
-                  <td>
+                  <td data-label="Qty to Release">
                     <input type="number" step="0.01" name="items[{{ $item->id }}][quantity_released]" class="form-input mono" required min="0.01" value="{{ $item->quantity_requested }}" style="width: 100%; padding: 4px 8px; font-size: 12.5px; text-align: right;">
                   </td>
                 </tr>
@@ -145,8 +145,8 @@
     </div>
     @endif
 
-    <!-- Manager/Chef Approval Controls (Visible when status is 'pending' for managers/chefs) -->
-    @if($showcaseRequest->status === 'pending' && $isManagerOrChef)
+    <!-- Admin Approval Controls (Visible when status is 'pending' for outlet admins) -->
+    @if($showcaseRequest->status === 'pending' && $isOutletAdmin)
     <div class="card" style="border: 1px solid var(--div2);">
       <div class="ch">
         <div class="ch-title">Request Authorization Actions</div>
@@ -221,21 +221,21 @@
       </div>
     </div>
 
-    <!-- Manager/Chef Authorization Status Notice -->
+    <!-- Authorization Status Notice -->
     <div class="card" style="background: rgba(255, 255, 255, 0.01); border: 1px dashed var(--div2);">
       <div class="cb" style="font-size: 12.5px; line-height: 1.4; color: var(--txt2);">
-        @if($isManagerOrChef)
+        @if($isOutletAdmin)
           <div style="display: flex; align-items: center; gap: 6px; color: var(--green-tx); font-weight: 600; margin-bottom: 6px;">
             <span class="on-dot" style="background: var(--green); width: 6px; height: 6px;"></span>
-            Authorized Session
+            Outlet Admin Session
           </div>
-          <span>You are logged in as <b>{{ auth('web')->user()->name }}</b> ({{ ucfirst(auth('web')->user()->role) }}). You have administrative access to approve, reject, or release items.</span>
+          <span>You are logged in as <b>{{ session('portal_employee_name', 'Admin') }}</b> (Outlet Admin). You have full access to approve, reject, or release items.</span>
         @else
           <div style="display: flex; align-items: center; gap: 6px; color: var(--txt3); font-weight: 600; margin-bottom: 6px;">
             <span class="on-dot" style="background: var(--txt3); width: 6px; height: 6px;"></span>
-            Outlet Operator View
+            Salesperson View
           </div>
-          <span style="opacity: 0.85;">Approval and release operations require authorization. Log in as a Store Manager, Chef, or GM on the central system to manage status.</span>
+          <span style="opacity: 0.85;">Approval and release operations require outlet admin access. Contact your outlet administrator to manage this request.</span>
         @endif
       </div>
     </div>

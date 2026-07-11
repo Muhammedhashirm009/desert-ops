@@ -80,7 +80,8 @@
           <th>SKU</th>
           <th>Material Name</th>
           <th>Category</th>
-          <th style="text-align: right;">Kitchen Stock</th>
+          <th style="text-align: right;">Opening Stock</th>
+          <th style="text-align: right;">Closing Stock</th>
           <th style="text-align: right;">Store Stock (Ref)</th>
           <th>Status</th>
           <th>Actions</th>
@@ -101,8 +102,11 @@
               <span class="badge bb">Packaging</span>
             @endif
           </td>
-          <td data-label="Kitchen Stock" class="mono" style="text-align: right; font-weight: 600; color: var(--blue-tx);">
-            {{ number_format($material->kitchen_stock, 2) }} {{ $material->unit }}
+          <td data-label="Opening Stock" class="mono" style="text-align: right; color: var(--txt3);">
+            {{ number_format($material->opening_stock ?? $material->kitchen_stock, 2) }} {{ $material->unit }}
+          </td>
+          <td data-label="Closing Stock" class="mono font-semibold" style="text-align: right; font-weight: 600; color: var(--blue-tx);">
+            {{ number_format($material->closing_stock ?? $material->kitchen_stock, 2) }} {{ $material->unit }}
           </td>
           <td data-label="Store Stock (Ref)" class="mono td2" style="text-align: right;">
             {{ number_format($material->current_stock, 2) }} {{ $material->unit }}

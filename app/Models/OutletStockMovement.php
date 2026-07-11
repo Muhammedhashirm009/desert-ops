@@ -14,6 +14,7 @@ class OutletStockMovement extends Model
         'outlet_id',
         'product_id',
         'material_id',
+        'outlet_catalog_item_id',
         'from_location',
         'to_location',
         'quantity',
@@ -38,5 +39,10 @@ class OutletStockMovement extends Model
     public function material(): BelongsTo
     {
         return $this->belongsTo(Material::class);
+    }
+
+    public function catalogItem(): BelongsTo
+    {
+        return $this->belongsTo(OutletCatalogItem::class, 'outlet_catalog_item_id');
     }
 }

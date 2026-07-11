@@ -51,12 +51,16 @@
             <span class="badge bp">General Manager</span>
           @elseif($user->role === 'store_manager')
             <span class="badge ba">Store Manager</span>
-          @elseif($user->role === 'kitchen_chef')
-            <span class="badge bg">Kitchen Chef</span>
+          @elseif($user->role === 'laban_chef')
+            <span class="badge bg">Laban Chef</span>
+          @elseif($user->role === 'baklava_chef')
+            <span class="badge bg">Baklava Chef</span>
+          @elseif($user->role === 'dough_chef')
+            <span class="badge bg">Dough Chef</span>
           @elseif($user->role === 'accountant')
             <span class="badge bb">Accountant</span>
           @else
-            <span class="badge bg-sec">{{ ucfirst($user->role) }}</span>
+            <span class="badge bg-sec">{{ str_replace('_', ' ', ucfirst($user->role)) }}</span>
           @endif
         </td>
         <td data-label="Created At" class="mono td2">{{ $user->created_at->format('Y-m-d') }}</td>
