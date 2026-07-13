@@ -124,7 +124,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (filteredProducts.length > 0) {
             options += '<optgroup label="Dessert Products">';
             filteredProducts.forEach(p => {
-                options += `<option value="${p.id}">[${p.sku}] ${p.name} (Kitchen stock: ${parseInt(p.current_kitchen_stock)} units)</option>`;
+                const typeLabel = p.type === 'half_prepared' ? '🟡 Half-prep' : '🟢 Ready';
+                options += `<option value="${p.id}">[${p.sku}] ${p.name} — ${typeLabel} (Kitchen: ${parseInt(p.current_kitchen_stock)})</option>`;
             });
             options += '</optgroup>';
         }

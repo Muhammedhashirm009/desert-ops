@@ -66,13 +66,15 @@
                 @endforeach
               </optgroup>
               @endif
-              <optgroup label="🏭 Existing Products">
+              @if($products->count() > 0)
+              <optgroup label="🍳 Half-prepared Products (assigned)">
                 @foreach($products as $product)
                   <option value="product_{{ $product->id }}" data-type="product" {{ old('product_id') == $product->id ? 'selected' : '' }}>
                     [{{ $product->sku }}] {{ $product->name }}
                   </option>
                 @endforeach
               </optgroup>
+              @endif
             </select>
             <input type="hidden" name="product_id" id="product_id_hidden" value="{{ old('product_id') }}">
             <input type="hidden" name="outlet_catalog_item_id" id="catalog_item_id_hidden" value="{{ old('outlet_catalog_item_id') }}">

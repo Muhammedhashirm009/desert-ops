@@ -50,8 +50,11 @@ class OutletProductionController extends Controller
         $outletId = session('portal_outlet_id');
         $outlet = Outlet::findOrFail($outletId);
 
-        // Products that can be produced at this outlet
-        $products = Product::orderBy('name')->get();
+        // Only half-prepared products assigned to this outlet (these need cooking)
+        $halfPreparedProductIds = $outlet->assignedProducts()
+            ->wherePivot('type', 'half_prepared')
+            ->pluck('products.id');
+        $products = Product::whereIn('id', $halfPreparedProductIds)->orderBy('name')->get();
 
         // Catalog items assigned to this outlet
         $catalogItems = $outlet->assignedCatalogItems()

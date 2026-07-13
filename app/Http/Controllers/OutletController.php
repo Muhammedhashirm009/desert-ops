@@ -193,10 +193,20 @@ class OutletController extends Controller
      */
     public function assignedProducts(Outlet $outlet)
     {
-        $productIds = $outlet->assignedProducts()->pluck('products.id');
+        // Get assigned products with their type classification
+        $assignedProducts = $outlet->assignedProducts()->withPivot('type')->get();
         $materialIds = $outlet->assignedMaterials()->pluck('materials.id');
 
-        $products = Product::whereIn('id', $productIds)->get(['id', 'name', 'sku', 'retail_price', 'current_kitchen_stock']);
+        $products = $assignedProducts->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'sku' => $product->sku,
+                'retail_price' => $product->retail_price,
+                'current_kitchen_stock' => $product->current_kitchen_stock,
+                'type' => $product->pivot->type ?? 'pre_cooked',
+            ];
+        });
         $materials = Material::whereIn('id', $materialIds)->where('category', 'packaging')->get(['id', 'name', 'sku', 'retail_price', 'kitchen_stock', 'per_box_qty']);
 
         return response()->json([
