@@ -73,6 +73,7 @@
         <div class="ch-title">Consumed Raw Materials (Kitchen stock deduction)</div>
       </div>
       <div class="cb" style="padding: 0;">
+        @if($productionRun->materials->count() > 0)
         <table>
           <thead>
             <tr>
@@ -98,6 +99,11 @@
             @endforeach
           </tbody>
         </table>
+        @else
+        <div style="padding: 20px; text-align: center; color: var(--txt3); font-style: italic;">
+          No raw materials logged for this production batch.
+        </div>
+        @endif
       </div>
     </div>
   </div>
@@ -111,7 +117,7 @@
       </div>
       <div class="cb">
         <p style="font-size: 12.5px; color: var(--txt2); margin-bottom: 15px;">
-          Completing this run consumes the listed raw materials from the <strong>Kitchen Stock</strong> and adds <strong>{{ number_format($productionRun->quantity_produced, 0) }} units</strong> of finished desserts to the central kitchen stock.
+          Completing this run consumes the listed raw materials (if any) from the <strong>Kitchen Stock</strong> and adds <strong>{{ number_format($productionRun->quantity_produced, 0) }} units</strong> of finished desserts to the central kitchen stock.
         </p>
         
         <div style="display: flex; flex-direction: column; gap: 10px;">

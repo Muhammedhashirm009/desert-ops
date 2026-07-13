@@ -13,11 +13,12 @@ class OutletCatalogItem extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'sku', 'retail_price', 'description', 'is_active', 'created_by',
+        'name', 'sku', 'retail_price', 'cost_price', 'description', 'is_active', 'created_by',
     ];
 
     protected $casts = [
         'retail_price' => 'decimal:2',
+        'cost_price' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 

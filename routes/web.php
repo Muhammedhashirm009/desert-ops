@@ -99,6 +99,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('outlets/{outlet}/assignments', [OutletController::class, 'updateAssignments'])->name('outlets.update-assignments');
         Route::get('api/outlets/{outlet}/assigned-products', [OutletController::class, 'assignedProducts'])->name('api.outlets.assigned-products');
         Route::resource('sales-logs', SalesLogController::class)->only(['index', 'show', 'create', 'store', 'destroy']);
+        Route::get('/reports/central-kitchen', [\App\Http\Controllers\CentralKitchenReportController::class, 'index'])->name('reports.central-kitchen');
     });
 
 

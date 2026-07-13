@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
               </div>
             </td>
             <td>
-              <input type="number" step="0.01" name="items[${currentRowIndex}][unit_price]" class="form-input price-input" required min="0.00" value="0.00" style="padding: 6px 8px;">
+              <input type="number" step="0.01" name="items[${currentRowIndex}][unit_price]" class="form-input price-input" min="0.00" value="" placeholder="Enter at GRN" style="padding: 6px 8px;">
             </td>
             <td class="mono font-semibold text-sm subtotal-lbl" style="padding: 10px 12px;">
               ₹0.00

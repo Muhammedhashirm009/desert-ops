@@ -29,15 +29,17 @@
         <table>
           <thead>
             <tr>
-              <th style="width: 15%;">SKU</th>
-              <th style="width: 45%;">Material</th>
-              <th style="width: 20%; text-align: right;">Ordered Qty</th>
-              <th style="width: 20%;">Received Qty *</th>
+              <th style="width: 12%;">SKU</th>
+              <th style="width: 33%;">Material</th>
+              <th style="width: 15%; text-align: right;">Ordered Qty</th>
+              <th style="width: 15%;">Received Qty *</th>
+              <th style="width: 15%;">Unit Cost (₹) *</th>
+              <th style="width: 10%; text-align: right;">Total</th>
             </tr>
           </thead>
           <tbody>
             @foreach($purchaseOrder->items as $index => $item)
-            <tr>
+            <tr class="item-row">
               <td class="mono">{{ $item->material->sku }}</td>
               <td>
                 <div style="font-weight: 600; color: var(--txt);">{{ $item->material->name }}</div>
@@ -46,20 +48,33 @@
                 <!-- Hidden input for material ID -->
                 <input type="hidden" name="items[{{ $index }}][material_id]" value="{{ $item->material_id }}">
               </td>
-              <td class="mono font-semibold" style="text-align: right; padding-right: 25px;">
+              <td class="mono font-semibold" style="text-align: right; padding-right: 15px;">
                 {{ number_format($item->quantity, 2) }} {{ $item->material->unit }}
               </td>
               <td>
                 <div style="display: flex; align-items: center; gap: 6px;">
                   <input type="number" step="0.01" name="items[{{ $index }}][quantity_received]" 
-                         class="form-input" required min="0" max="{{ $item->quantity * 1.5 }}" 
+                         class="form-input qty-input" required min="0" max="{{ $item->quantity * 1.5 }}" 
                          value="{{ old('items.'.$index.'.quantity_received', $item->quantity) }}" 
-                         style="padding: 6px 8px; width: 100px;">
-                  <span style="color: var(--txt3); font-size: 12px;">{{ $item->material->unit }}</span>
+                         style="padding: 6px 8px; width: 90px;">
+                  <span style="color: var(--txt3); font-size: 11px;">{{ $item->material->unit }}</span>
                 </div>
+              </td>
+              <td>
+                <input type="number" step="0.01" name="items[{{ $index }}][unit_cost]" 
+                       class="form-input cost-input" required min="0.01" 
+                       value="{{ old('items.'.$index.'.unit_cost', $item->unit_price) }}" 
+                       style="padding: 6px 8px; width: 100px;" placeholder="0.00">
+              </td>
+              <td class="mono font-semibold line-total" style="text-align: right; padding-right: 10px;">
+                ₹0.00
               </td>
             </tr>
             @endforeach
+            <tr>
+              <td colspan="5" style="text-align: right; font-weight: 700; padding: 12px;">Grand Total Cost:</td>
+              <td id="grand-total-display" class="mono font-bold" style="text-align: right; font-weight: 700; padding: 12px; color: var(--green-tx);">₹0.00</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -103,4 +118,32 @@
     </div>
   </div>
 </form>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('.item-row');
+    const grandTotalDisplay = document.getElementById('grand-total-display');
+
+    function calculate() {
+        let grandTotal = 0;
+        rows.forEach(row => {
+            const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
+            const cost = parseFloat(row.querySelector('.cost-input').value) || 0;
+            const total = qty * cost;
+            row.querySelector('.line-total').textContent = '₹' + total.toFixed(2);
+            grandTotal += total;
+        });
+        grandTotalDisplay.textContent = '₹' + grandTotal.toFixed(2);
+    }
+
+    rows.forEach(row => {
+        row.querySelector('.qty-input').addEventListener('input', calculate);
+        row.querySelector('.cost-input').addEventListener('input', calculate);
+    });
+
+    calculate();
+});
+</script>
 @endsection

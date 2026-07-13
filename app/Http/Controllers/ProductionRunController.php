@@ -33,9 +33,9 @@ class ProductionRunController extends Controller
             'quantity_produced' => 'required|numeric|min:0.01',
             'prepared_date' => 'required|date|before_or_equal:today',
             'notes' => 'nullable|string',
-            'items' => 'required|array|min:1',
-            'items.*.material_id' => 'required|exists:materials,id',
-            'items.*.quantity_used' => 'required|numeric|min:0.01',
+            'items' => 'nullable|array',
+            'items.*.material_id' => 'required_with:items|exists:materials,id',
+            'items.*.quantity_used' => 'required_with:items|numeric|min:0.01',
         ]);
 
         try {
@@ -62,12 +62,14 @@ class ProductionRunController extends Controller
             ]);
 
             // Save consumed materials
-            foreach ($request->items as $item) {
-                ProductionRunMaterial::create([
-                    'production_run_id' => $productionRun->id,
-                    'material_id' => $item['material_id'],
-                    'quantity_used' => $item['quantity_used'],
-                ]);
+            if ($request->has('items') && is_array($request->items)) {
+                foreach ($request->items as $item) {
+                    ProductionRunMaterial::create([
+                        'production_run_id' => $productionRun->id,
+                        'material_id' => $item['material_id'],
+                        'quantity_used' => $item['quantity_used'],
+                    ]);
+                }
             }
 
             DB::commit();
@@ -120,16 +122,18 @@ class ProductionRunController extends Controller
             DB::beginTransaction();
 
             // 1. Stock Check (Verify kitchen_stock is sufficient)
-            foreach ($productionRun->materials as $runMat) {
-                $material = $runMat->material;
-                if ($runMat->quantity_used > $material->kitchen_stock) {
-                    throw new \Exception("Insufficient stock in Kitchen for material '{$material->name}'. Available in kitchen: {$material->kitchen_stock} {$material->unit}, Required: {$runMat->quantity_used} {$material->unit}. Please request more materials from the store manager.");
+            if ($productionRun->materials->count() > 0) {
+                foreach ($productionRun->materials as $runMat) {
+                    $material = $runMat->material;
+                    if ($runMat->quantity_used > $material->kitchen_stock) {
+                        throw new \Exception("Insufficient stock in Kitchen for material '{$material->name}'. Available in kitchen: {$material->kitchen_stock} {$material->unit}, Required: {$runMat->quantity_used} {$material->unit}. Please request more materials from the store manager.");
+                    }
                 }
-            }
 
-            // 2. Decrement kitchen stock for each material
-            foreach ($productionRun->materials as $runMat) {
-                $runMat->material->decrement('kitchen_stock', $runMat->quantity_used);
+                // 2. Decrement kitchen stock for each material
+                foreach ($productionRun->materials as $runMat) {
+                    $runMat->material->decrement('kitchen_stock', $runMat->quantity_used);
+                }
             }
 
             // 3. Update run status

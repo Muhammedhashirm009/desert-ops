@@ -68,6 +68,13 @@
         </div>
       </div>
 
+      <div class="form-grp">
+        <label for="cost_price">Cost Price / Initial WAC (₹)</label>
+        <input type="number" step="0.01" name="cost_price" id="cost_price" class="form-input" value="{{ old('cost_price', 0) }}" min="0" placeholder="0.00">
+        <span style="font-size: 11px; color: var(--txt3);">Weighted average cost — auto-updated when GRN is received</span>
+        @error('cost_price')<span style="color: var(--red-tx); font-size: 12px;">{{ $message }}</span>@enderror
+      </div>
+
       <div class="grid-2">
         <div class="form-grp">
           <label for="current_stock">Initial Stock Level (Boxes) *</label>

@@ -69,6 +69,13 @@
         </div>
       </div>
 
+      <div class="form-grp">
+        <label for="cost_price">Cost Price / WAC (₹)</label>
+        <input type="number" step="0.01" name="cost_price" id="cost_price" class="form-input" value="{{ old('cost_price', $material->cost_price ?? 0) }}" min="0" placeholder="0.00">
+        <span style="font-size: 11px; color: var(--txt3);">Weighted average cost — auto-updated when GRN is received</span>
+        @error('cost_price')<span style="color: var(--red-tx); font-size: 12px;">{{ $message }}</span>@enderror
+      </div>
+
       <div class="grid-2">
         <div class="form-grp">
           <label for="current_stock">Current Stock Level *</label>
@@ -88,6 +95,53 @@
         <button type="submit" class="btn-pri">Update Material</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Price History Card -->
+<div class="card" style="max-width: 600px; margin: 20px auto 0 auto;">
+  <div class="ch">
+    <div class="ch-title">WAC Price History Log</div>
+  </div>
+  <div class="cb" style="padding: 0;">
+    @if($priceHistories && $priceHistories->count() > 0)
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th style="text-align: right;">Old WAC</th>
+          <th style="text-align: right;">New WAC</th>
+          <th style="text-align: right;">Qty Recv</th>
+          <th style="text-align: right;">GRN Cost</th>
+          <th>GRN Ref</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach($priceHistories as $history)
+        <tr>
+          <td style="font-size: 12px;">{{ $history->created_at->format('Y-m-d H:i') }}</td>
+          <td class="mono" style="text-align: right;">₹{{ number_format($history->old_cost_price, 2) }}</td>
+          <td class="mono font-semibold" style="text-align: right; color: var(--green-tx);">₹{{ number_format($history->new_cost_price, 2) }}</td>
+          <td class="mono" style="text-align: right;">{{ number_format($history->quantity_received, 2) }}</td>
+          <td class="mono" style="text-align: right;">₹{{ number_format($history->unit_cost, 2) }}</td>
+          <td class="mono" style="font-size: 12px;">
+            @if($history->grn)
+              <a href="{{ route('grns.show', $history->grn_id) }}" style="text-decoration: underline; color: inherit;">
+                {{ $history->grn->grn_number }}
+              </a>
+            @else
+              Manual
+            @endif
+          </td>
+        </tr>
+        @endforeach
+      </tbody>
+    </table>
+    @else
+    <div style="padding: 20px; text-align: center; color: var(--txt3); font-style: italic;">
+      No price history logged yet. Costs will update dynamically from GRNs.
+    </div>
+    @endif
   </div>
 </div>
 

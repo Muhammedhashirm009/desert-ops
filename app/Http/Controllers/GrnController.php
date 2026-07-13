@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\GoodsReceivedNote;
 use App\Models\GoodsReceivedNoteItem;
 use App\Models\Material;
+use App\Models\PriceHistory;
 use App\Models\PurchaseOrder;
 use App\Models\Account;
 use App\Models\JournalTransaction;
@@ -48,6 +49,7 @@ class GrnController extends Controller
             'items' => 'required|array|min:1',
             'items.*.material_id' => 'required|exists:materials,id',
             'items.*.quantity_received' => 'required|numeric|min:0',
+            'items.*.unit_cost' => 'nullable|numeric|min:0',
         ]);
 
         try {
@@ -72,21 +74,61 @@ class GrnController extends Controller
                 'notes' => $request->notes,
             ]);
 
-            // Save items, increment stock levels
+            $totalGrnCost = 0;
+
             foreach ($request->items as $itemId => $itemData) {
-                // Save GRN Item
+                $qtyReceived = (float) $itemData['quantity_received'];
+                $orderedItem = $purchaseOrder->items->where('material_id', $itemData['material_id'])->first();
+                $unitCost = isset($itemData['unit_cost']) && $itemData['unit_cost'] !== '' && $itemData['unit_cost'] !== null 
+                    ? (float) $itemData['unit_cost'] 
+                    : (float) ($orderedItem->unit_price ?? 0);
+                $lineCost = round($unitCost * $qtyReceived, 2);
+
+                // Save GRN Item with cost
                 GoodsReceivedNoteItem::create([
                     'goods_received_note_id' => $grn->id,
                     'material_id' => $itemData['material_id'],
-                    'quantity_received' => $itemData['quantity_received'],
+                    'quantity_received' => $qtyReceived,
+                    'unit_cost' => $unitCost,
+                    'line_cost' => $lineCost,
                 ]);
 
-                // Increment stock level in Materials
-                if ($itemData['quantity_received'] > 0) {
+                $totalGrnCost += $lineCost;
+
+                // Update material stock & WAC
+                if ($qtyReceived > 0) {
                     $material = Material::findOrFail($itemData['material_id']);
-                    $material->increment('current_stock', $itemData['quantity_received']);
+                    $oldStock = (float) $material->current_stock;
+                    $oldWAC = (float) $material->cost_price;
+
+                    // WAC calculation
+                    $totalOldValue = $oldStock * $oldWAC;
+                    $totalNewValue = $qtyReceived * $unitCost;
+                    $newTotalStock = $oldStock + $qtyReceived;
+                    $newWAC = $newTotalStock > 0 ? round(($totalOldValue + $totalNewValue) / $newTotalStock, 2) : $unitCost;
+
+                    // Log price history if cost changed
+                    if (abs($newWAC - $oldWAC) > 0.001) {
+                        PriceHistory::create([
+                            'item_type' => 'material',
+                            'item_id' => $material->id,
+                            'old_cost_price' => $oldWAC,
+                            'new_cost_price' => $newWAC,
+                            'quantity_received' => $qtyReceived,
+                            'unit_cost' => $unitCost,
+                            'grn_id' => $grn->id,
+                            'supplier_name' => $purchaseOrder->supplier->name ?? null,
+                            'changed_by' => auth()->id(),
+                        ]);
+                    }
+
+                    $material->update(['cost_price' => $newWAC]);
+                    $material->increment('current_stock', $qtyReceived);
                 }
             }
+
+            // Update GRN total cost
+            $grn->update(['total_cost' => $totalGrnCost]);
 
             // Update Purchase Order status to received
             $purchaseOrder->update(['status' => 'received']);
@@ -97,7 +139,7 @@ class GrnController extends Controller
                 'bill_number' => $billNumber,
                 'purchase_order_id' => $purchaseOrder->id,
                 'supplier_id' => $purchaseOrder->supplier_id,
-                'amount' => $purchaseOrder->total_amount,
+                'amount' => $totalGrnCost,
                 'status' => 'unpaid',
                 'due_date' => now()->addDays(15),
                 'notes' => "Auto-generated from PO receipt (GRN {$grnNumber})",
@@ -115,14 +157,14 @@ class GrnController extends Controller
                 JournalEntry::create([
                     'journal_transaction_id' => $tx->id,
                     'account_id' => $invAccount->id,
-                    'debit' => $purchaseOrder->total_amount,
+                    'debit' => $totalGrnCost,
                     'credit' => 0.00,
                 ]);
                 JournalEntry::create([
                     'journal_transaction_id' => $tx->id,
                     'account_id' => $apAccount->id,
                     'debit' => 0.00,
-                    'credit' => $purchaseOrder->total_amount,
+                    'credit' => $totalGrnCost,
                 ]);
             }
 

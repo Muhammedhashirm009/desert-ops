@@ -17,10 +17,12 @@ class GoodsReceivedNote extends Model
         'received_date',
         'received_by',
         'notes',
+        'total_cost',
     ];
 
     protected $casts = [
         'received_date' => 'datetime',
+        'total_cost' => 'decimal:2',
     ];
 
     public function purchaseOrder(): BelongsTo

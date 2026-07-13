@@ -22,13 +22,16 @@
   <div class="row r-3-1" style="grid-template-columns: 1fr 320px; gap: 16px;">
     <!-- Left: Raw Materials Consumed -->
     <div class="card">
-      <div class="ch">
-        <div class="ch-ic" style="background:var(--div);">
-          <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--txt2)"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
+      <div class="ch" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" id="toggle-materials">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="ch-ic" style="background:var(--div);">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style="stroke:var(--txt2)"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
+          </div>
+          <div class="ch-title">Raw Materials Consumed (Optional)</div>
         </div>
-        <div class="ch-title">Raw Materials Consumed in Kitchen</div>
+        <div style="font-size: 12px; color: var(--btn); font-weight: 600;" id="toggle-lbl">Add Details +</div>
       </div>
-      <div class="cb" style="padding: 0;">
+      <div class="cb" id="materials-cb" style="padding: 0; display: none;">
         <table class="po-table" id="consumption-table">
           <thead>
             <tr>
@@ -111,11 +114,32 @@
 document.addEventListener('DOMContentLoaded', function() {
     const container = document.getElementById('consumption-container');
     const addBtn = document.getElementById('add-material-btn');
+    const toggleMaterials = document.getElementById('toggle-materials');
+    const materialsCb = document.getElementById('materials-cb');
+    const toggleLbl = document.getElementById('toggle-lbl');
     
     // Array of raw materials
     const materials = @json($materials);
     
     let rowIndex = 0;
+    let materialsEnabled = false;
+
+    toggleMaterials.addEventListener('click', function() {
+        materialsEnabled = !materialsEnabled;
+        if (materialsEnabled) {
+            materialsCb.style.display = 'block';
+            toggleLbl.textContent = 'Hide Details -';
+            materialsCb.querySelectorAll('.material-select, input[type="number"]').forEach(el => {
+                el.required = true;
+            });
+        } else {
+            materialsCb.style.display = 'none';
+            toggleLbl.textContent = 'Add Details +';
+            materialsCb.querySelectorAll('.material-select, input[type="number"]').forEach(el => {
+                el.required = false;
+            });
+        }
+    });
     
     function createRow() {
         const row = document.createElement('tr');
@@ -128,13 +152,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         row.innerHTML = `
             <td>
-              <select name="items[${rowIndex}][material_id]" class="form-input material-select" required style="height: 36px;">
+              <select name="items[${rowIndex}][material_id]" class="form-input material-select" ${materialsEnabled ? 'required' : ''} style="height: 36px;">
                 ${options}
               </select>
             </td>
             <td>
               <div style="display: flex; align-items: center; gap: 6px;">
-                <input type="number" step="0.01" name="items[${rowIndex}][quantity_used]" class="form-input" required min="0.01" value="1.00" style="padding: 6px 8px;">
+                <input type="number" step="0.01" name="items[${rowIndex}][quantity_used]" class="form-input" ${materialsEnabled ? 'required' : ''} min="0.01" value="1.00" style="padding: 6px 8px;">
                 <span class="unit-lbl text-xs" style="color: var(--txt3); font-size: 11.5px; min-width: 28px;">unit</span>
               </div>
             </td>
@@ -170,10 +194,15 @@ document.addEventListener('DOMContentLoaded', function() {
     addBtn.addEventListener('click', createRow);
     
     document.getElementById('production-form').addEventListener('submit', function(e) {
-        const rows = document.querySelectorAll('#consumption-container tr');
-        if (rows.length === 0) {
-            e.preventDefault();
-            alert('Please add at least one raw material consumed for this production.');
+        if (materialsEnabled) {
+            const rows = document.querySelectorAll('#consumption-container tr');
+            if (rows.length === 0) {
+                e.preventDefault();
+                alert('Please add at least one raw material consumed for this production.');
+            }
+        } else {
+            // Empty the container so no items array is submitted
+            container.innerHTML = '';
         }
     });
 });

@@ -80,7 +80,7 @@ class OutletPortalController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('success', 'Logged out of store portal.');
+        return redirect()->route('portal.login')->with('success', 'Logged out of store portal.');
     }
 
     public function dashboard()
@@ -593,24 +593,42 @@ class OutletPortalController extends Controller
                 'notes' => $request->notes ?? 'Requested via Outlet Portal.',
             ]);
 
+            $totalDispatchCost = 0;
+
             foreach ($request->items as $item) {
                 list($type, $id) = explode(':', $item['item_id']);
                 if ($type === 'product') {
+                    $product = Product::find($id);
+                    $costPrice = (float) ($product->cost_price ?? 0);
+                    $lineCost = round($costPrice * $item['quantity'], 2);
+
                     DispatchItem::create([
                         'dispatch_id' => $dispatch->id,
                         'product_id' => $id,
                         'material_id' => null,
                         'quantity' => $item['quantity'],
+                        'unit_cost' => $costPrice,
+                        'line_cost' => $lineCost,
                     ]);
+                    $totalDispatchCost += $lineCost;
                 } else {
+                    $material = Material::find($id);
+                    $costPrice = (float) ($material->cost_price ?? 0);
+                    $lineCost = round($costPrice * $item['quantity'], 2);
+
                     DispatchItem::create([
                         'dispatch_id' => $dispatch->id,
                         'product_id' => null,
                         'material_id' => $id,
                         'quantity' => $item['quantity'],
+                        'unit_cost' => $costPrice,
+                        'line_cost' => $lineCost,
                     ]);
+                    $totalDispatchCost += $lineCost;
                 }
             }
+
+            $dispatch->update(['total_cost' => $totalDispatchCost]);
 
             DB::commit();
 

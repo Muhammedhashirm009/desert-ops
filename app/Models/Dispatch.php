@@ -17,10 +17,12 @@ class Dispatch extends Model
         'dispatch_date',
         'status', // pending, dispatched, received
         'notes',
+        'total_cost',
     ];
 
     protected $casts = [
         'dispatch_date' => 'date',
+        'total_cost' => 'decimal:2',
     ];
 
     public function outlet(): BelongsTo

@@ -22,10 +22,12 @@ class Material extends Model
         'min_stock_alert',
         'per_box_qty',
         'retail_price',
+        'cost_price',
     ];
 
     protected $casts = [
         'retail_price' => 'decimal:2',
+        'cost_price' => 'decimal:2',
     ];
 
     public function purchaseOrderItems(): HasMany

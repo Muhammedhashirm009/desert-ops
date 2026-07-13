@@ -236,8 +236,8 @@
             <div style="font-size: 11px; color: var(--txt3);">Category: {{ ucfirst($item->material->category) }}</div>
           </td>
           <td class="mono" style="padding: 12px 14px; text-align: right;">{{ number_format($item->quantity, 2) }} {{ $item->material->unit }}</td>
-          <td class="mono" style="padding: 12px 14px; text-align: right;">{{ number_format($item->unit_price, 2) }}</td>
-          <td class="mono font-semibold" style="padding: 12px 14px; text-align: right;">₹{{ number_format($item->subtotal, 2) }}</td>
+          <td class="mono" style="padding: 12px 14px; text-align: right;">{{ $item->unit_price > 0 ? '₹' . number_format($item->unit_price, 2) : 'TBD at GRN' }}</td>
+          <td class="mono font-semibold" style="padding: 12px 14px; text-align: right;">{{ $item->unit_price > 0 ? '₹' . number_format($item->subtotal, 2) : '—' }}</td>
         </tr>
         @endforeach
         <tr style="background: var(--pg-bg); border-top: 2px solid var(--div2);">

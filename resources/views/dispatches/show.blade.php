@@ -85,6 +85,8 @@
           <th>SKU</th>
           <th>Dessert Product</th>
           <th style="text-align: right;">Quantity Sent</th>
+          <th style="text-align: right;">Unit Cost (₹)</th>
+          <th style="text-align: right;">Line Cost (₹)</th>
         </tr>
       </thead>
       <tbody>
@@ -107,9 +109,23 @@
           <td class="mono font-semibold" style="text-align: right; color: var(--blue-tx); font-weight: 600;">
             {{ number_format($qty, 0) }} {{ $unit }}
           </td>
+          <td class="mono" style="text-align: right;">
+            ₹{{ number_format($item->unit_cost, 2) }}
+          </td>
+          <td class="mono font-semibold" style="text-align: right;">
+            ₹{{ number_format($item->line_cost, 2) }}
+          </td>
         </tr>
         @endforeach
       </tbody>
+      <tfoot>
+        <tr style="font-weight: 700; border-top: 1px solid var(--div);">
+          <td colspan="4" style="text-align: right; padding: 12px;">Total Dispatch Cost:</td>
+          <td class="mono font-bold" style="text-align: right; padding: 12px; color: var(--blue-tx);">
+            ₹{{ number_format($dispatch->total_cost, 2) }}
+          </td>
+        </tr>
+      </tfoot>
     </table>
   </div>
 

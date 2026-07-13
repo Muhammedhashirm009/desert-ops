@@ -23,7 +23,7 @@ class EnsurePortalOutletSelected
             // Block inactive employees
             if (!$employee->is_active) {
                 Auth::guard('outlet_employee')->logout();
-                return redirect()->route('login')->with('error', 'Your account has been deactivated. Please contact your outlet administrator.');
+                return redirect()->route('portal.login')->with('error', 'Your account has been deactivated. Please contact your outlet administrator.');
             }
 
             if (!$request->session()->has('portal_outlet_id')) {
@@ -52,6 +52,6 @@ class EnsurePortalOutletSelected
             return $next($request);
         }
 
-        return redirect()->route('login')->with('error', 'Please log in to your retail outlet portal.');
+        return redirect()->route('portal.login')->with('error', 'Please log in to your retail outlet portal.');
     }
 }

@@ -45,7 +45,7 @@ class PurchaseOrderController extends Controller
             'items.*.material_id' => 'required|exists:materials,id',
             'items.*.supplier_id' => 'nullable|exists:suppliers,id',
             'items.*.quantity' => 'required|numeric|min:0.01',
-            'items.*.unit_price' => 'required|numeric|min:0.00',
+            'items.*.unit_price' => 'nullable|numeric|min:0',
         ]);
 
         try {
@@ -76,10 +76,11 @@ class PurchaseOrderController extends Controller
                 }
                 $poNumber = 'PO-' . $year . '-' . str_pad($nextSerial, 4, '0', STR_PAD_LEFT);
 
-                // Calculate total amount
+                // Calculate total amount (handle null unit_prices)
                 $totalAmount = 0;
                 foreach ($supplierItems as $item) {
-                    $totalAmount += $item['quantity'] * $item['unit_price'];
+                    $unitPrice = isset($item['unit_price']) ? (float) $item['unit_price'] : 0;
+                    $totalAmount += $item['quantity'] * $unitPrice;
                 }
 
                 // Create Purchase Order

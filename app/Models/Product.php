@@ -15,11 +15,13 @@ class Product extends Model
         'name',
         'sku',
         'retail_price',
+        'cost_price',
         'current_kitchen_stock',
     ];
 
     protected $casts = [
         'retail_price' => 'decimal:2',
+        'cost_price' => 'decimal:2',
         'current_kitchen_stock' => 'decimal:2',
     ];
 

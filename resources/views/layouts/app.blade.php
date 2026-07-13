@@ -303,6 +303,9 @@
     <a href="{{ route('outlet-catalog.index') }}" class="nav-i {{ request()->routeIs('outlet-catalog.*') ? 'on' : '' }}">
       <span class="ni"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="9" y1="7" x2="16" y2="7"/><line x1="9" y1="11" x2="14" y2="11"/></svg></span>Outlet Catalog
     </a>
+    <a href="{{ route('reports.central-kitchen') }}" class="nav-i {{ request()->routeIs('reports.central-kitchen') ? 'on' : '' }}">
+      <span class="ni"><svg viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></span>Kitchen P&L
+    </a>
     @endif
   </div>
   @endif

@@ -31,6 +31,7 @@
         <th>Destination Outlet</th>
         <th>Shipment Date</th>
         <th style="text-align: center;">Total Items</th>
+        <th style="text-align: right;">Total Cost</th>
         <th>Status</th>
         <th style="text-align: right;">Actions</th>
       </tr>
@@ -50,6 +51,9 @@
         <td data-label="Shipment Date" class="mono">{{ $disp->dispatch_date->format('Y-m-d') }}</td>
         <td data-label="Total Items" class="mono" style="text-align: center; font-weight: 600;">
           {{ $disp->items->count() }} ({{ number_format($disp->items->sum('quantity'), 0) }} Units)
+        </td>
+        <td data-label="Total Cost" class="mono font-semibold" style="text-align: right; padding-right: 15px;">
+          ₹{{ number_format($disp->total_cost, 2) }}
         </td>
         <td data-label="Status">
           @if($disp->status === 'pending')

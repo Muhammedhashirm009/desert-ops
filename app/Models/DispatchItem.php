@@ -17,10 +17,14 @@ class DispatchItem extends Model
         'product_id',
         'material_id',
         'quantity',
+        'unit_cost',
+        'line_cost',
     ];
 
     protected $casts = [
         'quantity' => 'decimal:2',
+        'unit_cost' => 'decimal:2',
+        'line_cost' => 'decimal:2',
     ];
 
     public function dispatch(): BelongsTo

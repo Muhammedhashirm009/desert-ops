@@ -31,6 +31,7 @@ class MaterialController extends Controller
             'min_stock_alert' => 'required|numeric|min:0',
             'per_box_qty' => 'nullable|integer|min:1',
             'retail_price' => 'nullable|numeric|min:0',
+            'cost_price' => 'nullable|numeric|min:0',
         ]);
 
         Material::create($validated);
@@ -45,7 +46,12 @@ class MaterialController extends Controller
 
     public function edit(Material $material)
     {
-        return view('materials.edit', compact('material'));
+        $priceHistories = \App\Models\PriceHistory::where('item_type', 'material')
+            ->where('item_id', $material->id)
+            ->with(['grn', 'changedBy'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        return view('materials.edit', compact('material', 'priceHistories'));
     }
 
     public function update(Request $request, Material $material)
@@ -59,7 +65,22 @@ class MaterialController extends Controller
             'min_stock_alert' => 'required|numeric|min:0',
             'per_box_qty' => 'nullable|integer|min:1',
             'retail_price' => 'nullable|numeric|min:0',
+            'cost_price' => 'nullable|numeric|min:0',
         ]);
+
+        $oldCost = (float) $material->cost_price;
+        $newCost = $request->has('cost_price') ? (float) $request->cost_price : 0;
+
+        if (abs($newCost - $oldCost) > 0.001) {
+            \App\Models\PriceHistory::create([
+                'item_type' => 'material',
+                'item_id' => $material->id,
+                'old_cost_price' => $oldCost,
+                'new_cost_price' => $newCost,
+                'notes' => 'Manually updated from Raw Material settings page.',
+                'changed_by' => auth()->id(),
+            ]);
+        }
 
         $material->update($validated);
 

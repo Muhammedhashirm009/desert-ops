@@ -162,10 +162,12 @@
     <table style="border: 1px solid var(--div2); border-radius: var(--radius); overflow: hidden;">
       <thead>
         <tr style="background: var(--pg-bg);">
-          <th style="width: 15%; padding: 10px 14px;">SKU</th>
-          <th style="width: 45%; padding: 10px 14px;">Material Description</th>
-          <th style="width: 20%; padding: 10px 14px; text-align: right;">Ordered Qty</th>
-          <th style="width: 20%; padding: 10px 14px; text-align: right;">Received Qty</th>
+          <th style="width: 12%; padding: 10px 14px;">SKU</th>
+          <th style="width: 33%; padding: 10px 14px;">Material Description</th>
+          <th style="width: 15%; padding: 10px 14px; text-align: right;">Ordered Qty</th>
+          <th style="width: 15%; padding: 10px 14px; text-align: right;">Received Qty</th>
+          <th style="width: 13%; padding: 10px 14px; text-align: right;">Unit Cost</th>
+          <th style="width: 12%; padding: 10px 14px; text-align: right;">Line Cost</th>
         </tr>
       </thead>
       <tbody>
@@ -193,11 +195,23 @@
               </div>
             @endif
           </td>
+          <td class="mono" style="padding: 12px 14px; text-align: right;">
+            ₹{{ number_format($item->unit_cost, 2) }}
+          </td>
+          <td class="mono font-semibold" style="padding: 12px 14px; text-align: right;">
+            ₹{{ number_format($item->line_cost, 2) }}
+          </td>
         </tr>
         @endforeach
+        <tr style="background: var(--pg-bg); border-top: 1px solid var(--div2); font-weight: 700;">
+          <td colspan="5" style="padding: 12px 14px; text-align: right;">Grand Total Cost:</td>
+          <td class="mono font-bold" style="padding: 12px 14px; text-align: right; color: var(--green-tx);">
+            ₹{{ number_format($grn->total_cost, 2) }}
+          </td>
+        </tr>
         @if($grn->notes)
         <tr style="background: var(--pg-bg); border-top: 1px solid var(--div2);">
-          <td colspan="4" style="padding: 12px 14px;">
+          <td colspan="6" style="padding: 12px 14px;">
             <div style="font-size: 12px; color: var(--txt2);">
               <strong>GRN Notes / Remarks:</strong> {{ $grn->notes }}
             </div>

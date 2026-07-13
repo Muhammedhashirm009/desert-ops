@@ -72,7 +72,7 @@ class PortalShowcaseRequestController extends Controller
             $showcaseRequest = ShowcaseRequest::create([
                 'request_number' => $requestNumber,
                 'outlet_id' => $outletId,
-                'requested_by' => session('portal_employee_name', $request->requested_by),
+                'requested_by' => $request->requested_by ?: session('portal_employee_name'),
                 'requested_date' => now()->toDateString(),
                 'status' => 'pending',
                 'notes' => $request->notes,

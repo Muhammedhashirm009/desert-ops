@@ -44,10 +44,16 @@
         </div>
 
         <div class="form-grp">
-          <label for="current_kitchen_stock">Initial Kitchen Stock *</label>
-          <input type="number" step="1" name="current_kitchen_stock" id="current_kitchen_stock" class="form-input" value="{{ old('current_kitchen_stock', 0) }}" required>
-          @error('current_kitchen_stock')<span style="color: var(--red-tx); font-size: 12px;">{{ $message }}</span>@enderror
+          <label for="cost_price">Cost Price (₹)</label>
+          <input type="number" step="0.01" name="cost_price" id="cost_price" class="form-input" value="{{ old('cost_price', 0) }}">
+          @error('cost_price')<span style="color: var(--red-tx); font-size: 12px;">{{ $message }}</span>@enderror
         </div>
+      </div>
+
+      <div class="form-grp">
+        <label for="current_kitchen_stock">Initial Kitchen Stock *</label>
+        <input type="number" step="1" name="current_kitchen_stock" id="current_kitchen_stock" class="form-input" value="{{ old('current_kitchen_stock', 0) }}" required>
+        @error('current_kitchen_stock')<span style="color: var(--red-tx); font-size: 12px;">{{ $message }}</span>@enderror
       </div>
 
       <div class="mt-4" style="display: flex; justify-content: flex-end; gap: 10px;">

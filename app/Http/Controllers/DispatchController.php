@@ -6,6 +6,7 @@ use App\Models\Dispatch;
 use App\Models\DispatchItem;
 use App\Models\Outlet;
 use App\Models\OutletStock;
+use App\Models\Material;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +35,7 @@ class DispatchController extends Controller
             'dispatch_date' => 'required|date|before_or_equal:today',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => 'required',
             'items.*.quantity' => 'required|numeric|min:1',
         ]);
 
@@ -59,13 +60,39 @@ class DispatchController extends Controller
                 'notes' => $request->notes,
             ]);
 
+            $totalDispatchCost = 0;
+
             foreach ($request->items as $item) {
+                $rawId = $item['product_id'];
+                $productId = null;
+                $materialId = null;
+                $costPrice = 0;
+
+                if (str_starts_with($rawId, 'mat:')) {
+                    $materialId = (int) substr($rawId, 4);
+                    $material = Material::find($materialId);
+                    $costPrice = (float) ($material->cost_price ?? 0);
+                } else {
+                    $productId = (int) $rawId;
+                    $product = Product::find($productId);
+                    $costPrice = (float) ($product->cost_price ?? 0);
+                }
+
+                $lineCost = round($costPrice * $item['quantity'], 2);
+
                 DispatchItem::create([
                     'dispatch_id' => $dispatch->id,
-                    'product_id' => $item['product_id'],
+                    'product_id' => $productId,
+                    'material_id' => $materialId,
                     'quantity' => $item['quantity'],
+                    'unit_cost' => $costPrice,
+                    'line_cost' => $lineCost,
                 ]);
+
+                $totalDispatchCost += $lineCost;
             }
+
+            $dispatch->update(['total_cost' => $totalDispatchCost]);
 
             DB::commit();
 
