@@ -100,6 +100,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('api/outlets/{outlet}/assigned-products', [OutletController::class, 'assignedProducts'])->name('api.outlets.assigned-products');
         Route::resource('sales-logs', SalesLogController::class)->only(['index', 'show', 'create', 'store', 'destroy']);
         Route::get('/reports/central-kitchen', [\App\Http\Controllers\CentralKitchenReportController::class, 'index'])->name('reports.central-kitchen');
+        Route::get('/inventory/initialize', [\App\Http\Controllers\InventoryInitializationController::class, 'index'])->name('inventory.initialize');
+        Route::post('/inventory/initialize', [\App\Http\Controllers\InventoryInitializationController::class, 'store'])->name('inventory.initialize.store');
     });
 
 
